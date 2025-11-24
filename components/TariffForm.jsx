@@ -4,6 +4,7 @@ import styles from "@/styles/TariffForm.module.css";
 import { downloadPrivacyPolicy } from "@/lib/downloadUtils";
 import CustomSelect from "./CustomSelect";
 import { useDictionary } from "./LanguageProvider";
+import SuccessModal from "./SuccessModal";
 
 export default function TariffForm({ tariff, onClose, onSubmit }) {
   const [name, setName] = useState("");
@@ -11,14 +12,14 @@ export default function TariffForm({ tariff, onClose, onSubmit }) {
   const [details, setDetails] = useState("");
   const [accept, setAccept] = useState(false);
   const [sending, setSending] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
   const formCopy = useDictionary().participation?.form ?? {};
   const placeholders = formCopy.placeholders ?? {};
-  const contactOptions =
-    formCopy.contactOptions ?? [
-      { value: "call", label: "CALL ME" },
-      { value: "telegram", label: "TELEGRAM" },
-      { value: "whatsapp", label: "WHATSAPP" },
-    ];
+  const contactOptions = formCopy.contactOptions ?? [
+    { value: "call", label: "CALL ME" },
+    { value: "telegram", label: "TELEGRAM" },
+    { value: "whatsapp", label: "WHATSAPP" },
+  ];
   const checkboxCopy = formCopy.checkbox ?? {};
   const supportCopy = formCopy.support ?? {};
   const ctaCopy = formCopy.cta ?? {};
@@ -63,185 +64,200 @@ export default function TariffForm({ tariff, onClose, onSubmit }) {
       }
 
       await onSubmit?.(payload);
+      setShowSuccess(true);
     } finally {
       setSending(false);
-      onClose?.();
     }
   };
 
-  return (
-    <div className={styles.modalGrid} role="document">
-      {/* LEFT */}
-      <div className={styles.leftCol}>
-        <form className={styles.form} onSubmit={handleSubmit}>
-          <div className={styles.headings}>
-            <h3 className={styles.title}>{tariff?.title}</h3>
-            <p className={styles.mode}>{tariff?.mode}</p>
-          </div>
+  const handleSuccessClose = () => {
+    setShowSuccess(false);
+    onClose?.();
+  };
 
-          <div className={styles.inputsContainer}>
-            <input
-              className={styles.input}
-              placeholder={placeholders.name || "NAME"}
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-            <CustomSelect
-              value={method}
-              onChange={(val) => {
-                setMethod(val);
-                setDetails("");
-              }}
-              placeholder={placeholders.contactMethod || "CHOOSE CONTACT METHOD"}
-              options={contactOptions}
-            />
-            {!!method && (
+  return (
+    <>
+      {showSuccess && <SuccessModal onClose={handleSuccessClose} />}
+      <div className={styles.modalGrid} role="document">
+        {/* LEFT */}
+        <div className={styles.leftCol}>
+          <form className={styles.form} onSubmit={handleSubmit}>
+            <div className={styles.headings}>
+              <h3 className={styles.title}>{tariff?.title}</h3>
+              <p className={styles.mode}>{tariff?.mode}</p>
+            </div>
+
+            <div className={styles.inputsContainer}>
               <input
                 className={styles.input}
-                placeholder={detailsPlaceholder}
-                value={details}
-                onChange={(e) => setDetails(e.target.value)}
+                placeholder={placeholders.name || "NAME"}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
               />
-            )}
-            <label className={styles.checkboxRow}>
-              <input
-                type="checkbox"
-                checked={accept}
-                onChange={(e) => setAccept(e.target.checked)}
+              <CustomSelect
+                value={method}
+                onChange={(val) => {
+                  setMethod(val);
+                  setDetails("");
+                }}
+                placeholder={
+                  placeholders.contactMethod || "CHOOSE CONTACT METHOD"
+                }
+                options={contactOptions}
               />
+              {!!method && (
+                <input
+                  className={styles.input}
+                  placeholder={detailsPlaceholder}
+                  value={details}
+                  onChange={(e) => setDetails(e.target.value)}
+                />
+              )}
+              <label className={styles.checkboxRow}>
+                <input
+                  type="checkbox"
+                  checked={accept}
+                  onChange={(e) => setAccept(e.target.checked)}
+                />
 
-              <span className={styles.cbText}>
-                {checkboxCopy.textBefore || "I ACCEPT THE"}{" "}
+                <span className={styles.cbText}>
+                  {checkboxCopy.textBefore || "I ACCEPT THE"}{" "}
+                  <button
+                    type="button"
+                    className={styles.linkBtn}
+                    onClick={downloadPrivacyPolicy}
+                  >
+                    {checkboxCopy.privacy || "PRIVACY POLICY"}
+                  </button>{" "}
+                  {checkboxCopy.textAfter || "AND CONTRACTUAL OFFERS"}
+                </span>
+              </label>
+
+              <div className={styles.inlineSupport}>
+                <span>{supportCopy.text || "OR CONTACT US DIRECTLY"}</span>
                 <button
                   type="button"
                   className={styles.linkBtn}
-                  onClick={downloadPrivacyPolicy}
+                  onClick={() =>
+                    window.open(
+                      "https://t.me/sndct_supp",
+                      "_blank",
+                      "noopener,noreferrer"
+                    )
+                  }
                 >
-                  {checkboxCopy.privacy || "PRIVACY POLICY"}
-                </button>{" "}
-                {checkboxCopy.textAfter || "AND CONTRACTUAL OFFERS"}
-              </span>
-            </label>
+                  {supportCopy.link || "SUPPORT"}
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
 
-            <div className={styles.inlineSupport}>
-              <span>{supportCopy.text || "OR CONTACT US DIRECTLY"}</span>
+        {/* RIGHT */}
+        <div className={styles.rightCol}>
+          <ul className={styles.list}>
+            {(tariff?.bullets ?? []).map((b) => {
+              const text = typeof b === "string" ? b : b?.text || "";
+              const muted =
+                typeof b === "string"
+                  ? b.startsWith("NO ") ||
+                    b.toLowerCase().includes("not included")
+                  : Boolean(b?.muted);
+              return (
+                <li
+                  key={`${tariff?.id || "tariff"}-${text}`}
+                  className={`${styles.bullet} ${muted ? styles.muted : ""}`}
+                >
+                  <span className={styles.bulletIcon}>&lt;</span>
+                  {text}
+                </li>
+              );
+            })}
+          </ul>
+
+          <div className={styles.extra}>
+            <span className={styles.star}>*</span>
+            <div className={styles.extraLines}>
+              {(tariff?.extra ?? []).map((e) => {
+                const text = typeof e === "string" ? e : e?.text || "";
+                const mutedExtra =
+                  typeof e === "string"
+                    ? e.toLowerCase().includes("not included")
+                    : Boolean(e?.muted);
+                return (
+                  <p
+                    key={`${tariff?.id || "tariff-extra"}-${text}`}
+                    className={`${styles.extraText} ${
+                      mutedExtra ? styles.muted : ""
+                    }`}
+                  >
+                    {text}
+                  </p>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className={styles.bottomRow}>
+            <div className={styles.priceWrap}>
+              <div>
+                {(() => {
+                  const price = tariff?.price || "";
+                  const symbol = price.match(/^[^\d?]+/)?.[0] || "";
+                  const amount = price.slice(symbol.length);
+                  return (
+                    <>
+                      <span className={styles.priceSymbol}>
+                        {symbol || "$"}
+                      </span>
+                      <span className={styles.price}>{amount || price}</span>
+                    </>
+                  );
+                })()}
+              </div>
+            </div>
+            <div className={styles.ctaRow}>
+              <button
+                type="submit"
+                className={`${styles.ctaText} ${
+                  !canSubmit ? styles.disabled : ""
+                }`}
+                disabled={!canSubmit}
+                onClick={handleSubmit}
+              >
+                {sending
+                  ? ctaCopy.sending || "SENDING..."
+                  : tariff?.cta || ctaCopy.default || "RESERVE YOUR SPOT"}
+              </button>
               <button
                 type="button"
-                className={styles.linkBtn}
-                onClick={() =>
-                  window.open("https://t.me/sndct_supp", "_blank", "noopener,noreferrer")
-                }
+                className={`${styles.ctaArrow} ${
+                  !canSubmit ? styles.disabled : ""
+                }`}
+                disabled={!canSubmit}
+                onClick={handleSubmit}
+                aria-label="Submit"
               >
-                {supportCopy.link || "SUPPORT"}
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 12 12"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M10.9497 1.04936L1.05025 10.9489M10.9497 1.04936V10.9489M10.9497 1.04936H1.05025"
+                    stroke="black"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
               </button>
             </div>
           </div>
-        </form>
-      </div>
-
-      {/* RIGHT */}
-      <div className={styles.rightCol}>
-        <ul className={styles.list}>
-          {(tariff?.bullets ?? []).map((b) => {
-            const text = typeof b === "string" ? b : b?.text || "";
-            const muted =
-              typeof b === "string"
-                ? b.startsWith("NO ") || b.toLowerCase().includes("not included")
-                : Boolean(b?.muted);
-            return (
-              <li
-                key={`${tariff?.id || "tariff"}-${text}`}
-                className={`${styles.bullet} ${muted ? styles.muted : ""}`}
-              >
-                <span className={styles.bulletIcon}>&lt;</span>
-                {text}
-              </li>
-            );
-          })}
-        </ul>
-
-        <div className={styles.extra}>
-          <span className={styles.star}>*</span>
-          <div className={styles.extraLines}>
-            {(tariff?.extra ?? []).map((e) => {
-              const text = typeof e === "string" ? e : e?.text || "";
-              const mutedExtra =
-                typeof e === "string"
-                  ? e.toLowerCase().includes("not included")
-                  : Boolean(e?.muted);
-              return (
-                <p
-                  key={`${tariff?.id || "tariff-extra"}-${text}`}
-                  className={`${styles.extraText} ${
-                    mutedExtra ? styles.muted : ""
-                  }`}
-                >
-                  {text}
-                </p>
-              );
-            })}
-          </div>
-        </div>
-
-        <div className={styles.bottomRow}>
-          <div className={styles.priceWrap}>
-            <div>
-              {(() => {
-                const price = tariff?.price || "";
-                const symbol = price.match(/^[^\d?]+/)?.[0] || "";
-                const amount = price.slice(symbol.length);
-                return (
-                  <>
-                    <span className={styles.priceSymbol}>
-                      {symbol || "$"}
-                    </span>
-                    <span className={styles.price}>{amount || price}</span>
-                  </>
-                );
-              })()}
-            </div>
-          </div>
-          <div className={styles.ctaRow}>
-            <button
-              type="submit"
-              className={`${styles.ctaText} ${
-                !canSubmit ? styles.disabled : ""
-              }`}
-              disabled={!canSubmit}
-              onClick={handleSubmit}
-            >
-              {sending
-                ? ctaCopy.sending || "SENDING..."
-                : tariff?.cta || ctaCopy.default || "RESERVE YOUR SPOT"}
-            </button>
-            <button
-              type="button"
-              className={`${styles.ctaArrow} ${
-                !canSubmit ? styles.disabled : ""
-              }`}
-              disabled={!canSubmit}
-              onClick={handleSubmit}
-              aria-label="Submit"
-            >
-              <svg
-                width="12"
-                height="12"
-                viewBox="0 0 12 12"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M10.9497 1.04936L1.05025 10.9489M10.9497 1.04936V10.9489M10.9497 1.04936H1.05025"
-                  stroke="black"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </button>
-          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

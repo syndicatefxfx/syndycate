@@ -53,7 +53,7 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html lang="he">
       <body
         className={`${stencil.variable} ${inter.variable} ${anton.variable} ${blackOps.variable}`}
       >
