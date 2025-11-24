@@ -16,7 +16,7 @@ export default function HeroSection() {
   const ctaText = heroCopy.cta ?? "";
 
   useEffect(() => {
-    const targetDate = new Date("2025-09-01T00:00:00");
+    const targetDate = new Date("2026-01-20T00:00:00");
     const updateTimer = () => {
       const now = new Date();
       const diff = targetDate.getTime() - now.getTime();
