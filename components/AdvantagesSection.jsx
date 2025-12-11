@@ -49,9 +49,9 @@ export default function AdvantagesSection() {
                 width="572"
                 height="572"
                 filterUnits="userSpaceOnUse"
-                color-interpolation-filters="sRGB"
+                colorInterpolationFilters="sRGB"
               >
-                <feFlood flood-opacity="0" result="BackgroundImageFix" />
+                <feFlood floodOpacity="0" result="BackgroundImageFix" />
                 <feBlend
                   mode="normal"
                   in="SourceGraphic"
@@ -94,8 +94,8 @@ export default function AdvantagesSection() {
                 y2="336"
                 gradientUnits="userSpaceOnUse"
               >
-                <stop stop-color="#0EFEF2" />
-                <stop offset="1" stop-color="#0A0A0A" />
+                <stop stopColor="#0EFEF2" />
+                <stop offset="1" stopColor="#0A0A0A" />
               </linearGradient>
             </defs>
           </svg>

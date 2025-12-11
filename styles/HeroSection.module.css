@@ -126,7 +126,173 @@
 
   color: var(--color-secondary);
   z-index: 1000;
+  position: relative;
 }
+
+.hanukkahSale {
+  position: absolute;
+  top: -20px;
+  left: -20px;
+  z-index: 1001;
+  max-width: 200px;
+  height: auto;
+}
+
+.saleBadge {
+  position: absolute;
+  top: -30px;
+  left: -15px;
+  background-image: url("/saleIcon.png");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  width: 180px;
+  height: 180px;
+  transform: rotate(-5deg);
+  z-index: 1001;
+}
+
+:global(.rtl) .saleBadge {
+  left: auto;
+  right: -10px;
+  transform: rotate(5deg);
+}
+
+/* ВАРИАНТ 2: Классическая плашка с закругленными углами и свечением
+.saleBadge {
+  position: absolute;
+  top: -20px;
+  left: -10px;
+  background: linear-gradient(135deg, #ff4444 0%, #ff6666 100%);
+  color: white;
+  font-family: var(--font-inter);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 8px 18px;
+  transform: rotate(-5deg);
+  box-shadow: 
+    0 0 20px rgba(255, 68, 68, 0.6),
+    0 4px 12px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  z-index: 1001;
+  white-space: nowrap;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.saleBadge::before {
+  content: "";
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(135deg, #ff4444, #ff6666);
+  border-radius: 8px;
+  z-index: -1;
+  filter: blur(4px);
+  opacity: 0.6;
+}
+
+:global(.rtl) .saleBadge {
+  left: auto;
+  right: -10px;
+  transform: rotate(5deg);
+}
+*/
+
+/* ВАРИАНТ 3: Стикер с эффектом "скотча"
+.saleBadge {
+  position: absolute;
+  top: -20px;
+  left: -10px;
+  background: #ff4444;
+  color: white;
+  font-family: var(--font-inter);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 10px 20px;
+  transform: rotate(-5deg);
+  box-shadow: 
+    0 2px 8px rgba(0, 0, 0, 0.3),
+    0 0 0 2px rgba(255, 255, 255, 0.1);
+  z-index: 1001;
+  white-space: nowrap;
+  border-radius: 4px;
+  position: relative;
+}
+
+.saleBadge::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: repeating-linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.3) 0px,
+    rgba(255, 255, 255, 0.3) 8px,
+    transparent 8px,
+    transparent 16px
+  );
+}
+
+.saleBadge::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background: linear-gradient(
+    45deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.1) 50%,
+    transparent 70%
+  );
+  border-radius: 4px;
+}
+
+:global(.rtl) .saleBadge {
+  left: auto;
+  right: -10px;
+  transform: rotate(5deg);
+}
+*/
+
+/* ВАРИАНТ 4: Минималистичная плашка с тонкой рамкой
+.saleBadge {
+  position: absolute;
+  top: -20px;
+  left: -10px;
+  background: rgba(255, 68, 68, 0.95);
+  backdrop-filter: blur(4px);
+  color: white;
+  font-family: var(--font-inter);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 6px 16px;
+  transform: rotate(-3deg);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  z-index: 1001;
+  white-space: nowrap;
+  border-radius: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+:global(.rtl) .saleBadge {
+  left: auto;
+  right: -10px;
+  transform: rotate(3deg);
+}
+*/
 
 .bottomRight p {
   z-index: 2000;
@@ -419,6 +585,13 @@
     right: 4px;
   }
 
+  .saleBadge {
+    width: 150px;
+    height: 150px;
+    top: -25px;
+    left: -12px;
+  }
+
   .signInText {
     width: 247px;
     height: 46px;
@@ -642,6 +815,13 @@
   /* текст справа под заголовком — компактнее */
   .bottomRight {
     font-size: 16px;
+  }
+
+  .saleBadge {
+    width: 120px;
+    height: 120px;
+    top: -20px;
+    left: -10px;
   }
 
   .bottomRight p {

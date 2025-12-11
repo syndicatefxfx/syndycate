@@ -1,36 +1,78 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Syndycate - Trading Education Platform
 
-## Getting Started
+Веб-сайт образовательной платформы для трейдинга с поддержкой мультиязычности (английский/иврит) и RTL-направления.
 
-First, run the development server:
+## 🛠 Технологический стек
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+### Основные технологии
+
+- **Next.js 15.4.2** - React-фреймворк с App Router
+- **React 19.1.0** - UI библиотека
+- **CSS Modules** - Модульные стили для компонентов
+
+### Библиотеки
+
+- **GSAP 3.13.0** - Анимации
+- **react-scroll-parallax 3.4.5** - Параллакс эффекты
+- **@intercom/messenger-js-sdk** - Чат поддержки
+
+### Интернационализация
+
+- Кастомная система i18n с поддержкой английского и иврита
+- RTL (Right-to-Left) поддержка для иврита
+- Файлы переводов: `lib/i18n/dictionaries.js`
+- Context Provider: `components/LanguageProvider.jsx`
+
+### Интеграции
+
+- **Google Analytics** (G-GHFG6E363J)
+- **Meta Pixel** (1562326801612859)
+- **Intercom** - Чат поддержки
+- **Tawk.to** - Альтернативный чат виджет
+
+### Бэкенд
+
+- Next.js API Routes (`/api/leads`)
+- Интеграция с Google Apps Script для отправки данных
+
+## 📁 Структура проекта
+
+```
+app/              # Next.js App Router
+components/       # React компоненты
+lib/              # Утилиты и переводы
+styles/           # CSS Modules
+public/           # Статические файлы
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🚀 Запуск
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+```bash
+# Установка
+npm install
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+# Разработка
+npm run dev
 
-## Learn More
+# Сборка
+npm run build
+npm start
+```
 
-To learn more about Next.js, take a look at the following resources:
+## 🔧 Переменные окружения
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Создайте `.env.local`:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```env
+GAS_WEBAPP_URL=https://your-google-apps-script-url
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-public-anon-key
+SUPABASE_SERVICE_ROLE=your-service-role-key
+```
 
-## Deploy on Vercel
+## 📝 Особенности
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Мультиязычность с автоматическим переключением LTR/RTL
+- CSS Modules для изоляции стилей
+- Оптимизация шрифтов через `next/font`
+- Server Components по умолчанию, Client Components с `"use client"`

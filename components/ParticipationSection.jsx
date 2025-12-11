@@ -133,6 +133,7 @@ export default function ParticipationSection() {
             {/* цена + кнопка */}
             <div className={styles.bottomRow}>
               <div className={styles.priceWrap}>
+                {t.oldPrice && <s className={styles.oldPrice}>{t.oldPrice}</s>}
                 <div>
                   {(() => {
                     const price = t.price || "";
@@ -148,8 +149,6 @@ export default function ParticipationSection() {
                     );
                   })()}
                 </div>
-
-                {/* {t.oldPrice && <s className={styles.oldPrice}>{t.oldPrice}</s>} */}
               </div>
 
               <div className={styles.fullRow}>

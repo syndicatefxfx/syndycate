@@ -70,21 +70,21 @@ export default function ResultsSection() {
                       </React.Fragment>
                     ))}
                   </span>
-                <svg
-                  width="40"
-                  height="40"
-                  viewBox="0 0 32 32"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <rect width="32" height="32" rx="5" fill="#0EFEF2" />
-                  <path
-                    d="M26.0435 8.54604C26.4288 8.91033 26.6537 9.41274 26.6687 9.94281C26.6837 10.4729 26.4876 10.9872 26.1235 11.3727L14.7902 23.3727C14.6065 23.5668 14.3858 23.7222 14.141 23.8296C13.8963 23.937 13.6325 23.9942 13.3653 23.998C13.098 24.0017 12.8328 23.9518 12.5851 23.8513C12.3375 23.7508 12.1125 23.6016 11.9235 23.4127L5.9235 17.4127C5.57022 17.0336 5.37789 16.5321 5.38703 16.014C5.39617 15.4958 5.60607 15.0015 5.97251 14.635C6.33894 14.2686 6.8333 14.0587 7.35144 14.0496C7.86957 14.0404 8.37103 14.2328 8.75016 14.586L13.2968 19.13L23.2168 8.62604C23.5811 8.2407 24.0835 8.0158 24.6136 8.0008C25.1437 7.9858 25.658 8.18192 26.0435 8.54604Z"
-                    fill="#0A0A0A"
-                    transform="translate(2 2) scale(0.85)"
-                  />
-                </svg>
-              </li>
+                  <svg
+                    width="40"
+                    height="40"
+                    viewBox="0 0 32 32"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <rect width="32" height="32" rx="5" fill="#0EFEF2" />
+                    <path
+                      d="M26.0435 8.54604C26.4288 8.91033 26.6537 9.41274 26.6687 9.94281C26.6837 10.4729 26.4876 10.9872 26.1235 11.3727L14.7902 23.3727C14.6065 23.5668 14.3858 23.7222 14.141 23.8296C13.8963 23.937 13.6325 23.9942 13.3653 23.998C13.098 24.0017 12.8328 23.9518 12.5851 23.8513C12.3375 23.7508 12.1125 23.6016 11.9235 23.4127L5.9235 17.4127C5.57022 17.0336 5.37789 16.5321 5.38703 16.014C5.39617 15.4958 5.60607 15.0015 5.97251 14.635C6.33894 14.2686 6.8333 14.0587 7.35144 14.0496C7.86957 14.0404 8.37103 14.2328 8.75016 14.586L13.2968 19.13L23.2168 8.62604C23.5811 8.2407 24.0835 8.0158 24.6136 8.0008C25.1437 7.9858 25.658 8.18192 26.0435 8.54604Z"
+                      fill="#0A0A0A"
+                      transform="translate(2 2) scale(0.85)"
+                    />
+                  </svg>
+                </li>
               );
             })}
           </ul>
@@ -160,9 +160,9 @@ export default function ResultsSection() {
               width="572"
               height="572"
               filterUnits="userSpaceOnUse"
-              color-interpolation-filters="sRGB"
+              colorInterpolationFilters="sRGB"
             >
-              <feFlood flood-opacity="0" result="BackgroundImageFix" />
+              <feFlood floodOpacity="0" result="BackgroundImageFix" />
               <feBlend
                 mode="normal"
                 in="SourceGraphic"
@@ -205,8 +205,8 @@ export default function ResultsSection() {
               y2="336"
               gradientUnits="userSpaceOnUse"
             >
-              <stop stop-color="#0EFEF2" />
-              <stop offset="1" stop-color="#0A0A0A" />
+              <stop stopColor="#0EFEF2" />
+              <stop offset="1" stopColor="#0A0A0A" />
             </linearGradient>
           </defs>
         </svg>

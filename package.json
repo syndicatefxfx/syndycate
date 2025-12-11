@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@intercom/messenger-js-sdk": "^0.0.14",
+    "@supabase/supabase-js": "^2.87.1",
     "gsap": "^3.13.0",
     "next": "15.4.2",
     "react": "19.1.0",

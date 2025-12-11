@@ -182,8 +182,8 @@
   letter-spacing: -0.01em;
   opacity: 0.4;
   text-decoration: line-through;
-  align-self: end;
-  margin-left: 10px;
+  align-self: flex-end;
+  margin-left: 0;
 }
 
 .fullRow {
@@ -198,8 +198,9 @@
 
 .priceWrap {
   display: flex;
-  flex-direction: row;
-  align-items: flex-start;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0;
 }
 
 .fullTextBtn {
@@ -335,13 +336,13 @@
   .priceWrap {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
+    align-items: flex-end;
+    gap: 0;
   }
 
   .oldPrice {
     margin-left: 0;
-
-    align-self: flex-start;
+    align-self: flex-end;
     font-size: 14px;
   }
 }
@@ -550,9 +551,9 @@
 
   .priceWrap {
     display: flex;
-    align-items: flex-end;
-    flex-direction: row;
-    gap: 8px;
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0;
   }
   .price,
   .priceSymbol {

@@ -1,0 +1,133 @@
+.banner {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%) translateY(100%);
+  opacity: 0;
+  z-index: 1000;
+  background: var(--color-dark-secondary);
+  border: 1px solid rgba(58, 58, 58, 1);
+  border-radius: 8px;
+  padding: 20px 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.5s ease-in-out;
+  width: 700px;
+  max-width: calc(100% - 40px);
+}
+
+.banner.visible {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+
+.banner.closing {
+  transform: translateX(-50%) translateY(100%);
+  opacity: 0;
+}
+
+.text {
+  font-family: var(--font-inter);
+  font-weight: 400;
+  font-size: 18px;
+  color: rgba(255, 255, 255, 1);
+  flex: 1;
+}
+
+.button {
+  font-family: var(--font-inter);
+  font-weight: 400;
+  font-size: 16px;
+  color: rgba(0, 0, 0, 1);
+  background: var(--color-primary);
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  border-radius: 5px;
+}
+
+.button:hover {
+  background: var(--color-secondary);
+}
+
+/* Планшеты */
+@media (max-width: 1024px) {
+  .banner {
+    width: 90%;
+    max-width: 600px;
+    padding: 18px 32px;
+  }
+
+  .text {
+    font-size: 17px;
+  }
+}
+
+/* Мобильные устройства */
+@media (max-width: 768px) {
+  .banner {
+    bottom: 16px;
+    padding: 14px 18px;
+    width: calc(100% - 32px);
+    max-width: none;
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .text {
+    font-size: 14px;
+    line-height: 1.4;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .button {
+    font-size: 13px;
+    padding: 8px 14px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+}
+
+/* Маленькие мобильные */
+@media (max-width: 480px) {
+  .banner {
+    bottom: 12px;
+    padding: 12px 16px;
+    width: calc(100% - 24px);
+    gap: 10px;
+  }
+
+  .text {
+    font-size: 13px;
+    line-height: 1.3;
+  }
+
+  .button {
+    font-size: 12px;
+    padding: 7px 12px;
+  }
+}
+
+/* Очень маленькие экраны */
+@media (max-width: 360px) {
+  .banner {
+    padding: 10px 14px;
+    gap: 8px;
+  }
+
+  .text {
+    font-size: 12px;
+  }
+
+  .button {
+    font-size: 11px;
+    padding: 6px 10px;
+  }
+}
