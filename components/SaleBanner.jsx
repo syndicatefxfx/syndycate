@@ -1,8 +1,11 @@
 "use client";
 import styles from "@/styles/SaleBanner.module.css";
 import { useEffect, useState, useRef } from "react";
+import { useDictionary } from "./LanguageProvider";
 
 export default function SaleBanner() {
+  const dictionary = useDictionary();
+  const saleBannerCopy = dictionary.saleBanner ?? {};
   const [isVisible, setIsVisible] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const bannerRef = useRef(null);
@@ -16,7 +19,14 @@ export default function SaleBanner() {
     if (!isVisible) return;
 
     const handleClickOutside = (event) => {
+      // Проверяем, что клик не по баннеру
       if (bannerRef.current && !bannerRef.current.contains(event.target)) {
+        // Проверяем, что клик не по хедеру или его элементам
+        const header = event.target.closest("header");
+        if (header) {
+          return; // Не закрываем баннер при клике на хедер
+        }
+
         setIsClosing(true);
         setTimeout(() => {
           setIsVisible(false);
@@ -62,10 +72,11 @@ export default function SaleBanner() {
       onClick={(e) => e.stopPropagation()}
     >
       <span className={styles.text}>
-        Special Hanukkah sale — limited time offers available!
+        {saleBannerCopy.text ??
+          "Special Hanukkah sale — limited time offers available!"}
       </span>
       <button className={styles.button} onClick={scrollToParticipation}>
-        View offers
+        {saleBannerCopy.button ?? "View offers"}
       </button>
     </div>
   );

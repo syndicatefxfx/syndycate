@@ -1,9 +1,20 @@
 .page {
   min-height: 100vh;
   padding: 48px clamp(16px, 4vw, 48px);
-  background: radial-gradient(circle at 20% 20%, #0c0c0c 0%, #050505 45%, #020202 100%);
+  background: radial-gradient(
+    circle at 20% 20%,
+    #0c0c0c 0%,
+    #050505 45%,
+    #020202 100%
+  );
   color: var(--color-secondary);
   font-family: var(--font-inter, "Inter"), system-ui, -apple-system, sans-serif;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
 }
 
 .topBar {
@@ -28,6 +39,10 @@
   letter-spacing: 0.08em;
 }
 
+.subtitle {
+  display: none;
+}
+
 .actions {
   display: flex;
   gap: 12px;
@@ -38,9 +53,38 @@
   background: var(--color-dark-secondary);
   border: 1px solid #2c2c2c;
   border-radius: 14px;
-  padding: 20px;
+  padding: 24px;
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
   margin-bottom: 20px;
+  min-height: 160px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cardGrid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.cardLink {
+  text-decoration: none;
+  display: block;
+}
+
+.cardLink:hover .card {
+  border-color: var(--color-primary);
+  box-shadow: 0 12px 40px rgba(14, 254, 242, 0.15);
+}
+
+.cardAccent {
+  color: var(--color-primary);
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  font-family: "stencil";
 }
 
 .form {
@@ -124,11 +168,24 @@
   border-color: var(--color-primary);
 }
 
+.breadcrumbs {
+  margin-top: 6px;
+  color: #9d9d9d;
+  font-size: 14px;
+}
+
+.title {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
 .itemsGrid {
   display: grid;
   gap: 16px;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   margin: 12px 0 16px;
+  justify-items: stretch;
 }
 
 .itemCard {
