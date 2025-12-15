@@ -1,13 +1,21 @@
 "use client";
-import { Fragment, useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState, useMemo } from "react";
 import styles from "@/styles/ProgramSection.module.css";
 import { flushSync } from "react-dom";
 import { useFloatingBlobs } from "@/lib/useFloatingBlobs";
-import { useDictionary } from "./LanguageProvider";
+import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
+import { useLanguage } from "./LanguageProvider";
 
 export default function ProgramSection() {
   const [isExpanded, setIsExpanded] = useState(false);
   const [openedIdx, setOpenedIdx] = useState(null);
+  const [programCopy, setProgramCopy] = useState({
+    titles: { desktop: [], tablet: [] },
+    paragraphs: [],
+    buttons: {},
+    modules: [],
+    previewCount: 8,
+  });
 
   const wrapperRef = useRef(null);
   const listRef = useRef(null);
@@ -16,7 +24,9 @@ export default function ProgramSection() {
   const sectionRef = useRef(null);
   const gradRef = useRef(null);
   const rowAnimTimerRef = useRef(null);
-  const programCopy = useDictionary().program ?? {};
+  const { language } = useLanguage();
+  const supabase = useMemo(() => createBrowserSupabaseClient(), []);
+
   const modules = programCopy.modules ?? [];
   const previewCount = Math.max(1, programCopy.previewCount ?? 8);
   const titleDesktopLines = programCopy.titles?.desktop ?? [];
@@ -24,6 +34,48 @@ export default function ProgramSection() {
     programCopy.titles?.tablet ?? programCopy.titles?.desktop ?? [];
   const paragraphBlocks = programCopy.paragraphs ?? [];
   const buttonLabels = programCopy.buttons ?? {};
+
+  useEffect(() => {
+    if (!supabase) return;
+    supabase
+      .from("program_sections")
+      .select(
+        `
+          title_lines,
+          paragraphs,
+          button_expand,
+          button_collapse,
+          preview_count,
+          modules:program_modules(id, ordering, title, answer)
+        `
+      )
+      .eq("locale", language)
+      .eq("status", "published")
+      .order("ordering", { foreignTable: "program_modules", ascending: true })
+      .limit(1)
+      .then(({ data, error }) => {
+        if (error) {
+          console.error("[Program] supabase error", error.message || error);
+          return;
+        }
+        const record = data?.[0];
+        if (record) {
+          setProgramCopy({
+            titles: {
+              desktop: record.title_lines ?? [],
+              tablet: record.title_lines ?? [],
+            },
+            paragraphs: record.paragraphs ?? [],
+            buttons: {
+              expand: record.button_expand ?? "",
+              collapse: record.button_collapse ?? "",
+            },
+            modules: record.modules ?? [],
+            previewCount: record.preview_count ?? 8,
+          });
+        }
+      });
+  }, [language, supabase]);
 
   const renderTitleLines = (lines = []) =>
     lines.map((line, idx) => (

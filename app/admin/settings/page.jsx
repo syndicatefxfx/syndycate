@@ -17,7 +17,7 @@ export default function SettingsPage() {
           </div>
         </header>
 
-        <section className={styles.card}>
+        <section className={styles.panel}>
           <div className={styles.muted}>
             Раздел в разработке. План: контакты, соцсети, email для заявок, коды аналитики.
           </div>

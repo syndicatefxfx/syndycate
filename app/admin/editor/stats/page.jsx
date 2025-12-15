@@ -1,23 +1,26 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import styles from "@/styles/Admin.module.css";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
-import Link from "next/link";
 
 const locales = [
   { code: "en", label: "English" },
   { code: "he", label: "Hebrew" },
 ];
 
-export default function WhoIsForEditorPage() {
+export default function StatsEditorPage() {
   const supabase = useMemo(() => createBrowserSupabaseClient(), []);
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
   const [locale, setLocale] = useState("en");
-  const [tag, setTag] = useState("");
-  const [titlePrefix, setTitlePrefix] = useState("");
-  const [titleSuffix, setTitleSuffix] = useState("");
+  const [section, setSection] = useState({
+    tag: "",
+    title_primary: "",
+    title_secondary: "",
+    description: "",
+  });
   const [items, setItems] = useState([]);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -50,14 +53,15 @@ export default function WhoIsForEditorPage() {
     setMessage("");
 
     supabase
-      .from("who_is_for_sections")
+      .from("stats_sections")
       .select(
         `
           id,
           tag,
-          title_prefix,
-          title_suffix,
-          items:who_is_for_items(id, ordering, number_label, title, bullets)
+          title_primary,
+          title_secondary,
+          description,
+          items:stats_items(id, ordering, value, note, description, area)
         `
       )
       .eq("locale", locale)
@@ -70,9 +74,12 @@ export default function WhoIsForEditorPage() {
         }
 
         const record = data?.[0];
-        setTag(record?.tag ?? "");
-        setTitlePrefix(record?.title_prefix ?? "");
-        setTitleSuffix(record?.title_suffix ?? "");
+        setSection({
+          tag: record?.tag ?? "",
+          title_primary: record?.title_primary ?? "",
+          title_secondary: record?.title_secondary ?? "",
+          description: record?.description ?? "",
+        });
         setItems(
           (record?.items ?? []).sort(
             (a, b) => (a.ordering ?? 0) - (b.ordering ?? 0)
@@ -107,56 +114,13 @@ export default function WhoIsForEditorPage() {
     setSession(null);
   };
 
+  const updateSection = (patch) => {
+    setSection((prev) => ({ ...prev, ...patch }));
+  };
+
   const updateItem = (index, patch) => {
     setItems((prev) =>
       prev.map((item, i) => (i === index ? { ...item, ...patch } : item))
-    );
-  };
-
-  const addItem = () => {
-    setItems((prev) => [
-      ...prev,
-      {
-        id: null,
-        number_label: `/0${prev.length + 1}`,
-        title: "",
-        bullets: [],
-      },
-    ]);
-  };
-
-  const removeItem = (index) => {
-    setItems((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const addBullet = (index) => {
-    setItems((prev) =>
-      prev.map((item, i) =>
-        i === index ? { ...item, bullets: [...(item.bullets ?? []), ""] } : item
-      )
-    );
-  };
-
-  const updateBullet = (itemIndex, bulletIndex, value) => {
-    setItems((prev) =>
-      prev.map((item, i) => {
-        if (i !== itemIndex) return item;
-        const bullets = [...(item.bullets ?? [])];
-        bullets[bulletIndex] = value;
-        return { ...item, bullets };
-      })
-    );
-  };
-
-  const removeBullet = (itemIndex, bulletIndex) => {
-    setItems((prev) =>
-      prev.map((item, i) => {
-        if (i !== itemIndex) return item;
-        const bullets = [...(item.bullets ?? [])].filter(
-          (_, j) => j !== bulletIndex
-        );
-        return { ...item, bullets };
-      })
     );
   };
 
@@ -167,14 +131,15 @@ export default function WhoIsForEditorPage() {
     setMessage("");
 
     const { data: upserted, error: upsertError } = await supabase
-      .from("who_is_for_sections")
+      .from("stats_sections")
       .upsert(
         {
           locale,
-          tag,
-          title_prefix: titlePrefix,
-          title_suffix: titleSuffix,
           status: "published",
+          tag: section.tag,
+          title_primary: section.title_primary,
+          title_secondary: section.title_secondary,
+          description: section.description,
         },
         { onConflict: "locale" }
       )
@@ -194,18 +159,19 @@ export default function WhoIsForEditorPage() {
       return;
     }
 
-    await supabase.from("who_is_for_items").delete().eq("section_id", sectionId);
+    await supabase.from("stats_items").delete().eq("section_id", sectionId);
 
     const payload = items.map((item, index) => ({
       section_id: sectionId,
       ordering: index + 1,
-      number_label: item.number_label ?? item.number ?? "",
-      title: item.title ?? "",
-      bullets: item.bullets ?? [],
+      value: item.value ?? "",
+      note: item.note ?? "",
+      description: item.description ?? "",
+      area: item.area ?? "",
     }));
 
     const { error: insertError } = await supabase
-      .from("who_is_for_items")
+      .from("stats_items")
       .insert(payload);
 
     if (insertError) {
@@ -219,7 +185,7 @@ export default function WhoIsForEditorPage() {
   if (!supabase) {
     return (
       <main className={styles.page}>
-        <div className={styles.card}>Проверьте Supabase env переменные.</div>
+        <div className={styles.panel}>Проверьте Supabase env переменные.</div>
       </main>
     );
   }
@@ -227,31 +193,33 @@ export default function WhoIsForEditorPage() {
   if (!session) {
     return (
       <main className={styles.page}>
-        <div className={styles.card}>
-          <div className={styles.breadcrumbs}>
-            <Link href="/admin">← Назад к разделам</Link>
+        <div className={styles.container}>
+          <div className={styles.panel}>
+            <div className={styles.breadcrumbs}>
+              <Link href="/admin">← Назад к разделам</Link>
+            </div>
+            <h1 className={styles.title}>Admin login</h1>
+            <form onSubmit={handleLogin} className={styles.form}>
+              <label className={styles.label}>
+                Email
+                <input name="email" type="email" required className={styles.input} />
+              </label>
+              <label className={styles.label}>
+                Password
+                <input
+                  name="password"
+                  type="password"
+                  required
+                  className={styles.input}
+                />
+              </label>
+              <button type="submit" className={styles.primaryBtn}>
+                Войти
+              </button>
+            </form>
+            {error && <div className={styles.error}>{error}</div>}
+            {message && <div className={styles.success}>{message}</div>}
           </div>
-          <h1 className={styles.title}>Admin login</h1>
-          <form onSubmit={handleLogin} className={styles.form}>
-            <label className={styles.label}>
-              Email
-              <input name="email" type="email" required className={styles.input} />
-            </label>
-            <label className={styles.label}>
-              Password
-              <input
-                name="password"
-                type="password"
-                required
-                className={styles.input}
-              />
-            </label>
-            <button type="submit" className={styles.primaryBtn}>
-              Войти
-            </button>
-          </form>
-          {error && <div className={styles.error}>{error}</div>}
-          {message && <div className={styles.success}>{message}</div>}
         </div>
       </main>
     );
@@ -263,9 +231,9 @@ export default function WhoIsForEditorPage() {
         <header className={styles.topBar}>
           <div>
             <div className={styles.kicker}>Editor</div>
-            <div className={styles.heading}>WHO IS THIS FOR?</div>
+            <div className={styles.heading}>STATS</div>
             <div className={styles.breadcrumbs}>
-              <Link href="/admin">← Ко всем разделам</Link>
+              <Link href="/admin/editor">← Ко всем блокам</Link>
             </div>
           </div>
           <div className={styles.actions}>
@@ -295,35 +263,51 @@ export default function WhoIsForEditorPage() {
           <>
             <section className={styles.panel}>
               <div className={styles.kicker}>Секция</div>
-              <label className={styles.label}>
-                Tag
-                <input
-                  value={tag}
-                  onChange={(e) => setTag(e.target.value)}
-                  className={styles.input}
-                  placeholder="WHO IS THIS FOR?"
-                />
-              </label>
               <div className={styles.row}>
                 <label className={styles.label}>
-                  Title prefix
+                  Tag
                   <input
-                    value={titlePrefix}
-                    onChange={(e) => setTitlePrefix(e.target.value)}
+                    value={section.tag ?? ""}
+                    onChange={(e) => updateSection({ tag: e.target.value })}
                     className={styles.input}
-                    placeholder="WHO IS"
+                    placeholder="<ABOUT US>"
                   />
                 </label>
                 <label className={styles.label}>
-                  Title suffix
+                  Title primary
                   <input
-                    value={titleSuffix}
-                    onChange={(e) => setTitleSuffix(e.target.value)}
+                    value={section.title_primary ?? ""}
+                    onChange={(e) =>
+                      updateSection({ title_primary: e.target.value })
+                    }
                     className={styles.input}
-                    placeholder="THIS FOR?"
+                    placeholder="WHAT IS SYNDICATE"
+                  />
+                </label>
+                <label className={styles.label}>
+                  Title secondary
+                  <input
+                    value={section.title_secondary ?? ""}
+                    onChange={(e) =>
+                      updateSection({ title_secondary: e.target.value })
+                    }
+                    className={styles.input}
+                    placeholder="IN NUMBERS?"
                   />
                 </label>
               </div>
+              <label className={styles.label}>
+                Description
+                <textarea
+                  value={section.description ?? ""}
+                  onChange={(e) =>
+                    updateSection({ description: e.target.value })
+                  }
+                  className={styles.input}
+                  rows={3}
+                  placeholder="We are happy to provide..."
+                />
+              </label>
             </section>
 
             <section className={styles.panel}>
@@ -333,73 +317,41 @@ export default function WhoIsForEditorPage() {
                   <div key={index} className={styles.itemCard}>
                     <div className={styles.itemHeader}>
                       <div className={styles.itemIndex}>/{String(index + 1).padStart(2, "0")}</div>
-                      <button
-                        type="button"
-                        className={styles.linkBtn}
-                        onClick={() => removeItem(index)}
-                      >
-                        Удалить
-                      </button>
                     </div>
                     <label className={styles.label}>
-                      Number
+                      Value
                       <input
-                        value={item.number_label ?? ""}
+                        value={item.value ?? ""}
                         onChange={(e) =>
-                          updateItem(index, { number_label: e.target.value })
+                          updateItem(index, { value: e.target.value })
                         }
                         className={styles.input}
-                        placeholder="/01"
+                        placeholder="28"
                       />
                     </label>
                     <label className={styles.label}>
-                      Title
+                      Note
                       <input
-                        value={item.title ?? ""}
-                        onChange={(e) => updateItem(index, { title: e.target.value })}
+                        value={item.note ?? ""}
+                        onChange={(e) => updateItem(index, { note: e.target.value })}
                         className={styles.input}
-                        placeholder="STARTING FROM SCRATCH"
+                        placeholder="(01)"
                       />
                     </label>
-                    <div className={styles.bullets}>
-                      <div className={styles.bulletsHeader}>
-                        <span>Bullets</span>
-                        <button
-                          type="button"
-                          className={styles.linkBtn}
-                          onClick={() => addBullet(index)}
-                        >
-                          Добавить пункт
-                        </button>
-                      </div>
-                      {(item.bullets ?? []).map((bullet, bulletIndex) => (
-                        <div key={bulletIndex} className={styles.bulletRow}>
-                          <input
-                            value={bullet ?? ""}
-                            onChange={(e) =>
-                              updateBullet(index, bulletIndex, e.target.value)
-                            }
-                            className={styles.input}
-                          />
-                          <button
-                            type="button"
-                            className={styles.linkBtn}
-                            onClick={() => removeBullet(index, bulletIndex)}
-                          >
-                            ✕
-                          </button>
-                        </div>
-                      ))}
-                      {(item.bullets ?? []).length === 0 && (
-                        <div className={styles.muted}>Нет пунктов</div>
-                      )}
-                    </div>
+                    <label className={styles.label}>
+                      Description
+                      <textarea
+                        value={item.description ?? ""}
+                        onChange={(e) =>
+                          updateItem(index, { description: e.target.value })
+                        }
+                        className={styles.input}
+                        rows={3}
+                      />
+                    </label>
                   </div>
                 ))}
               </div>
-              <button type="button" onClick={addItem} className={styles.secondaryBtn}>
-                Добавить элемент
-              </button>
             </section>
           </>
         )}

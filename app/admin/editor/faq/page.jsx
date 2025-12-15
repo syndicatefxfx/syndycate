@@ -10,23 +10,13 @@ const locales = [
   { code: "he", label: "Hebrew" },
 ];
 
-const pages = [
-  { slug: "home", label: "Главная" },
-];
-
-export default function SeoPage() {
+export default function FaqEditorPage() {
   const supabase = useMemo(() => createBrowserSupabaseClient(), []);
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
   const [locale, setLocale] = useState("en");
-  const [pageSlug, setPageSlug] = useState("home");
-  const [form, setForm] = useState({
-    meta_title: "",
-    meta_description: "",
-    meta_h1: "",
-    canonical: "",
-    og_image: "",
-  });
+  const [tag, setTag] = useState("");
+  const [items, setItems] = useState([]);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
@@ -58,11 +48,17 @@ export default function SeoPage() {
     setMessage("");
 
     supabase
-      .from("pages")
-      .select("meta_title, meta_description, meta_h1, canonical, og_image")
-      .eq("slug", pageSlug)
+      .from("faq_sections")
+      .select(
+        `
+          id,
+          tag,
+          items:faq_items(id, ordering, question, answer)
+        `
+      )
       .eq("locale", locale)
       .eq("status", "published")
+      .order("ordering", { foreignTable: "faq_items", ascending: true })
       .limit(1)
       .then(({ data, error: fetchError }) => {
         if (fetchError) {
@@ -70,17 +66,17 @@ export default function SeoPage() {
           setLoading(false);
           return;
         }
+
         const record = data?.[0];
-        setForm({
-          meta_title: record?.meta_title ?? "",
-          meta_description: record?.meta_description ?? "",
-          meta_h1: record?.meta_h1 ?? "",
-          canonical: record?.canonical ?? "",
-          og_image: record?.og_image ?? "",
-        });
+        setTag(record?.tag ?? "");
+        setItems(
+          (record?.items ?? []).sort(
+            (a, b) => (a.ordering ?? 0) - (b.ordering ?? 0)
+          )
+        );
         setLoading(false);
       });
-  }, [locale, pageSlug, session, supabase]);
+  }, [locale, session, supabase]);
 
   const handleLogin = async (event) => {
     event.preventDefault();
@@ -107,34 +103,70 @@ export default function SeoPage() {
     setSession(null);
   };
 
-  const updateField = (key, value) => {
-    setForm((prev) => ({ ...prev, [key]: value }));
+  const addItem = () => {
+    setItems((prev) => [
+      ...prev,
+      { id: null, question: "", answer: "" },
+    ]);
   };
 
-  const savePage = async () => {
+  const updateItem = (index, patch) => {
+    setItems((prev) =>
+      prev.map((it, i) => (i === index ? { ...it, ...patch } : it))
+    );
+  };
+
+  const removeItem = (index) => {
+    setItems((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const saveSection = async () => {
     if (!supabase || !session) return;
     setSaving(true);
     setError("");
     setMessage("");
 
-    const { error: upsertError } = await supabase
-      .from("pages")
+    const { data: upserted, error: upsertError } = await supabase
+      .from("faq_sections")
       .upsert(
         {
-          slug: pageSlug,
           locale,
           status: "published",
-          meta_title: form.meta_title,
-          meta_description: form.meta_description,
-          meta_h1: form.meta_h1,
-          canonical: form.canonical,
-          og_image: form.og_image,
+          tag,
         },
-        { onConflict: "slug,locale" }
-      );
+        { onConflict: "locale" }
+      )
+      .select("id")
+      .limit(1);
 
     if (upsertError) {
       setError(upsertError.message);
+      setSaving(false);
+      return;
+    }
+
+    const sectionId = upserted?.[0]?.id;
+    if (!sectionId) {
+      setError("Не удалось получить id секции");
+      setSaving(false);
+      return;
+    }
+
+    await supabase.from("faq_items").delete().eq("section_id", sectionId);
+
+    const payload = items.map((it, idx) => ({
+      section_id: sectionId,
+      ordering: idx + 1,
+      question: it.question ?? "",
+      answer: it.answer ?? "",
+    }));
+
+    const { error: insertError } = await supabase
+      .from("faq_items")
+      .insert(payload);
+
+    if (insertError) {
+      setError(insertError.message);
     } else {
       setMessage("Сохранено");
     }
@@ -155,7 +187,7 @@ export default function SeoPage() {
         <div className={styles.container}>
           <div className={styles.panel}>
             <div className={styles.breadcrumbs}>
-              <Link href="/admin">← Ко всем разделам</Link>
+              <Link href="/admin">← Назад к разделам</Link>
             </div>
             <h1 className={styles.title}>Admin login</h1>
             <form onSubmit={handleLogin} className={styles.form}>
@@ -189,24 +221,13 @@ export default function SeoPage() {
       <div className={styles.container}>
         <header className={styles.topBar}>
           <div>
-            <div className={styles.kicker}>SEO</div>
-            <div className={styles.heading}>Meta настройки</div>
+            <div className={styles.kicker}>Editor</div>
+            <div className={styles.heading}>FAQ</div>
             <div className={styles.breadcrumbs}>
-              <Link href="/admin">← Ко всем разделам</Link>
+              <Link href="/admin/editor">← Ко всем блокам</Link>
             </div>
           </div>
           <div className={styles.actions}>
-            <select
-              value={pageSlug}
-              onChange={(e) => setPageSlug(e.target.value)}
-              className={styles.select}
-            >
-              {pages.map((p) => (
-                <option key={p.slug} value={p.slug}>
-                  {p.label}
-                </option>
-              ))}
-            </select>
             <select
               value={locale}
               onChange={(e) => setLocale(e.target.value)}
@@ -218,7 +239,7 @@ export default function SeoPage() {
                 </option>
               ))}
             </select>
-            <button onClick={savePage} className={styles.primaryBtn} disabled={saving}>
+            <button onClick={saveSection} className={styles.primaryBtn} disabled={saving}>
               {saving ? "Сохраняю..." : "Сохранить"}
             </button>
             <button onClick={handleLogout} className={styles.secondaryBtn}>
@@ -230,56 +251,64 @@ export default function SeoPage() {
         {loading ? (
           <div className={styles.panel}>Загрузка...</div>
         ) : (
-          <section className={styles.panel}>
-            <div className={styles.kicker}>Главная</div>
-            <label className={styles.label}>
-              Meta Title
-              <input
-                value={form.meta_title ?? ""}
-                onChange={(e) => updateField("meta_title", e.target.value)}
-                className={styles.input}
-                maxLength={160}
-                placeholder="до ~70 символов"
-              />
-            </label>
-            <label className={styles.label}>
-              Meta Description
-              <textarea
-                value={form.meta_description ?? ""}
-                onChange={(e) => updateField("meta_description", e.target.value)}
-                className={styles.input}
-                rows={3}
-                maxLength={320}
-                placeholder="до ~160 символов"
-              />
-            </label>
-            <label className={styles.label}>
-              H1
-              <input
-                value={form.meta_h1 ?? ""}
-                onChange={(e) => updateField("meta_h1", e.target.value)}
-                className={styles.input}
-              />
-            </label>
-            <label className={styles.label}>
-              Canonical URL
-              <input
-                value={form.canonical ?? ""}
-                onChange={(e) => updateField("canonical", e.target.value)}
-                className={styles.input}
-                placeholder="https://example.com/"
-              />
-            </label>
-            <label className={styles.label}>
-              OG image URL
-              <input
-                value={form.og_image ?? ""}
-                onChange={(e) => updateField("og_image", e.target.value)}
-                className={styles.input}
-                placeholder="/og.png или https://..."
-              />
-            </label>
-          </section>
+          <>
+            <section className={styles.panel}>
+              <div className={styles.kicker}>Тег</div>
+              <label className={styles.label}>
+                FAQ tag
+                <input
+                  value={tag ?? ""}
+                  onChange={(e) => setTag(e.target.value)}
+                  className={styles.input}
+                  placeholder="FAQ"
+                />
+              </label>
+            </section>
+
+            <section className={styles.panel}>
+              <div className={styles.kicker}>Вопросы</div>
+              <div className={styles.itemsGrid}>
+                {items.map((it, idx) => (
+                  <div key={idx} className={styles.itemCard}>
+                    <div className={styles.itemHeader}>
+                      <div className={styles.itemIndex}>/{String(idx + 1).padStart(2, "0")}</div>
+                      <button
+                        type="button"
+                        className={styles.linkBtn}
+                        onClick={() => removeItem(idx)}
+                      >
+                        Удалить
+                      </button>
+                    </div>
+                    <label className={styles.label}>
+                      Вопрос
+                      <input
+                        value={it.question ?? ""}
+                        onChange={(e) =>
+                          updateItem(idx, { question: e.target.value })
+                        }
+                        className={styles.input}
+                      />
+                    </label>
+                    <label className={styles.label}>
+                      Ответ
+                      <textarea
+                        value={it.answer ?? ""}
+                        onChange={(e) =>
+                          updateItem(idx, { answer: e.target.value })
+                        }
+                        className={styles.input}
+                        rows={3}
+                      />
+                    </label>
+                  </div>
+                ))}
+              </div>
+              <button type="button" onClick={addItem} className={styles.secondaryBtn}>
+                Добавить вопрос
+              </button>
+            </section>
+          </>
         )}
 
         {error && <div className={styles.error}>{error}</div>}

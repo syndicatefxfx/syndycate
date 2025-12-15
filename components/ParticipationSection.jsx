@@ -2,17 +2,60 @@
 import styles from "@/styles/ParticipationSection.module.css";
 import tStyles from "@/styles/TariffForm.module.css";
 import TariffForm from "@/components/TariffForm";
-import { useCallback, useEffect, useState } from "react";
-import { useDictionary } from "./LanguageProvider";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
+import { useLanguage } from "./LanguageProvider";
 
 export default function ParticipationSection() {
   const [active, setActive] = useState(null);
   const [opening, setOpening] = useState(false);
   const [closing, setClosing] = useState(false);
-  const participation = useDictionary().participation ?? {};
+  const { language } = useLanguage();
+  const supabase = useMemo(() => createBrowserSupabaseClient(), []);
+  const [participation, setParticipation] = useState({
+    tag: "",
+    title: [],
+    tariffs: [],
+    modalCloseLabel: "Close",
+  });
+
+  useEffect(() => {
+    if (!supabase) return;
+    supabase
+      .from("participation_sections")
+      .select(
+        `
+          tag,
+          title_first,
+          title_second,
+          modal_close,
+          tariffs:participation_tariffs(id, ordering, title, mode, bullets, extra, price, old_price, cta)
+        `
+      )
+      .eq("locale", language)
+      .eq("status", "published")
+      .order("ordering", { foreignTable: "participation_tariffs", ascending: true })
+      .limit(1)
+      .then(({ data, error }) => {
+        if (error) {
+          console.error("[Participation] supabase error", error.message || error);
+          return;
+        }
+        const record = data?.[0];
+        if (record) {
+          setParticipation({
+            tag: record.tag ?? "",
+            title: [record.title_first ?? "", record.title_second ?? ""],
+            tariffs: record.tariffs ?? [],
+            modalCloseLabel: record.modal_close ?? "Close",
+          });
+        }
+      });
+  }, [language, supabase]);
+
   const tariffs = participation.tariffs ?? [];
   const titleLines = participation.title ?? [];
-  const modalCloseLabel = participation.form?.modalClose || "Close";
+  const modalCloseLabel = participation.modalCloseLabel ?? "Close";
 
   const openModal = (t) => {
     setClosing(false);

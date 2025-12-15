@@ -1,16 +1,60 @@
 "use client";
 import styles from "@/styles/StatsSection.module.css";
-import { useRef, useLayoutEffect } from "react";
+import { useRef, useLayoutEffect, useMemo, useState, useEffect } from "react";
 import { gsap } from "gsap";
 import { useFloatingBlobs } from "@/lib/useFloatingBlobs";
-import { useDictionary } from "./LanguageProvider";
+import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
+import { useLanguage } from "./LanguageProvider";
 
 export default function StatsSection() {
   const sectionRef = useRef(null);
   const leftRef = useRef(null);
   const rightRef = useRef(null);
-  const statsCopy = useDictionary().stats ?? {};
-  const stats = statsCopy.items ?? [];
+  const { language } = useLanguage();
+  const supabase = useMemo(() => createBrowserSupabaseClient(), []);
+  const [statsCopy, setStatsCopy] = useState({
+    tag: "",
+    title: { primary: "", secondary: "" },
+    description: "",
+    items: [],
+  });
+
+  useEffect(() => {
+    if (!supabase) return;
+    supabase
+      .from("stats_sections")
+      .select(
+        `
+          tag,
+          title_primary,
+          title_secondary,
+          description,
+          items:stats_items(id, ordering, value, note, description, area)
+        `
+      )
+      .eq("locale", language)
+      .eq("status", "published")
+      .order("ordering", { foreignTable: "stats_items", ascending: true })
+      .limit(1)
+      .then(({ data, error }) => {
+        if (error) {
+          console.error("[Stats] supabase error", error.message || error);
+          return;
+        }
+        const record = data?.[0];
+        if (record) {
+          setStatsCopy({
+            tag: record.tag ?? "",
+            title: {
+              primary: record.title_primary ?? "",
+              secondary: record.title_secondary ?? "",
+            },
+            description: record.description ?? "",
+            items: record.items ?? [],
+          });
+        }
+      });
+  }, [language, supabase]);
 
   useFloatingBlobs(sectionRef, [leftRef, rightRef], {
     speedRange: [12, 20], // замедлили движение
@@ -45,7 +89,7 @@ export default function StatsSection() {
 
       {/* ───── сетка карточек ───── */}
       <div className={styles.grid}>
-        {stats.map((stat) => (
+        {(statsCopy.items ?? []).map((stat) => (
           <div
             key={stat.id || stat.note}
             className={`${styles.card} ${styles[stat.area] ?? ""}`}

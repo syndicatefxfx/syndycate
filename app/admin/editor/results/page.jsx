@@ -10,23 +10,15 @@ const locales = [
   { code: "he", label: "Hebrew" },
 ];
 
-const pages = [
-  { slug: "home", label: "Главная" },
-];
-
-export default function SeoPage() {
+export default function ResultsEditorPage() {
   const supabase = useMemo(() => createBrowserSupabaseClient(), []);
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
   const [locale, setLocale] = useState("en");
-  const [pageSlug, setPageSlug] = useState("home");
-  const [form, setForm] = useState({
-    meta_title: "",
-    meta_description: "",
-    meta_h1: "",
-    canonical: "",
-    og_image: "",
-  });
+  const [titleTop, setTitleTop] = useState("");
+  const [titleHighlight, setTitleHighlight] = useState("");
+  const [bullets, setBullets] = useState([]);
+  const [cta, setCta] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
@@ -58,9 +50,16 @@ export default function SeoPage() {
     setMessage("");
 
     supabase
-      .from("pages")
-      .select("meta_title, meta_description, meta_h1, canonical, og_image")
-      .eq("slug", pageSlug)
+      .from("results_sections")
+      .select(
+        `
+          id,
+          title_top,
+          title_highlight,
+          bullets,
+          cta
+        `
+      )
       .eq("locale", locale)
       .eq("status", "published")
       .limit(1)
@@ -71,16 +70,13 @@ export default function SeoPage() {
           return;
         }
         const record = data?.[0];
-        setForm({
-          meta_title: record?.meta_title ?? "",
-          meta_description: record?.meta_description ?? "",
-          meta_h1: record?.meta_h1 ?? "",
-          canonical: record?.canonical ?? "",
-          og_image: record?.og_image ?? "",
-        });
+        setTitleTop(record?.title_top ?? "");
+        setTitleHighlight(record?.title_highlight ?? "");
+        setBullets(record?.bullets ?? []);
+        setCta(record?.cta ?? "");
         setLoading(false);
       });
-  }, [locale, pageSlug, session, supabase]);
+  }, [locale, session, supabase]);
 
   const handleLogin = async (event) => {
     event.preventDefault();
@@ -107,30 +103,38 @@ export default function SeoPage() {
     setSession(null);
   };
 
-  const updateField = (key, value) => {
-    setForm((prev) => ({ ...prev, [key]: value }));
+  const updateBullet = (index, value) => {
+    setBullets((prev) =>
+      prev.map((b, i) => (i === index ? value : b))
+    );
   };
 
-  const savePage = async () => {
+  const addBullet = () => {
+    setBullets((prev) => [...prev, ""]);
+  };
+
+  const removeBullet = (index) => {
+    setBullets((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const saveSection = async () => {
     if (!supabase || !session) return;
     setSaving(true);
     setError("");
     setMessage("");
 
     const { error: upsertError } = await supabase
-      .from("pages")
+      .from("results_sections")
       .upsert(
         {
-          slug: pageSlug,
           locale,
           status: "published",
-          meta_title: form.meta_title,
-          meta_description: form.meta_description,
-          meta_h1: form.meta_h1,
-          canonical: form.canonical,
-          og_image: form.og_image,
+          title_top: titleTop,
+          title_highlight: titleHighlight,
+          bullets: bullets,
+          cta,
         },
-        { onConflict: "slug,locale" }
+        { onConflict: "locale" }
       );
 
     if (upsertError) {
@@ -155,7 +159,7 @@ export default function SeoPage() {
         <div className={styles.container}>
           <div className={styles.panel}>
             <div className={styles.breadcrumbs}>
-              <Link href="/admin">← Ко всем разделам</Link>
+              <Link href="/admin">← Назад к разделам</Link>
             </div>
             <h1 className={styles.title}>Admin login</h1>
             <form onSubmit={handleLogin} className={styles.form}>
@@ -189,24 +193,13 @@ export default function SeoPage() {
       <div className={styles.container}>
         <header className={styles.topBar}>
           <div>
-            <div className={styles.kicker}>SEO</div>
-            <div className={styles.heading}>Meta настройки</div>
+            <div className={styles.kicker}>Editor</div>
+            <div className={styles.heading}>RESULTS</div>
             <div className={styles.breadcrumbs}>
-              <Link href="/admin">← Ко всем разделам</Link>
+              <Link href="/admin/editor">← Ко всем блокам</Link>
             </div>
           </div>
           <div className={styles.actions}>
-            <select
-              value={pageSlug}
-              onChange={(e) => setPageSlug(e.target.value)}
-              className={styles.select}
-            >
-              {pages.map((p) => (
-                <option key={p.slug} value={p.slug}>
-                  {p.label}
-                </option>
-              ))}
-            </select>
             <select
               value={locale}
               onChange={(e) => setLocale(e.target.value)}
@@ -218,7 +211,7 @@ export default function SeoPage() {
                 </option>
               ))}
             </select>
-            <button onClick={savePage} className={styles.primaryBtn} disabled={saving}>
+            <button onClick={saveSection} className={styles.primaryBtn} disabled={saving}>
               {saving ? "Сохраняю..." : "Сохранить"}
             </button>
             <button onClick={handleLogout} className={styles.secondaryBtn}>
@@ -230,56 +223,70 @@ export default function SeoPage() {
         {loading ? (
           <div className={styles.panel}>Загрузка...</div>
         ) : (
-          <section className={styles.panel}>
-            <div className={styles.kicker}>Главная</div>
-            <label className={styles.label}>
-              Meta Title
-              <input
-                value={form.meta_title ?? ""}
-                onChange={(e) => updateField("meta_title", e.target.value)}
-                className={styles.input}
-                maxLength={160}
-                placeholder="до ~70 символов"
-              />
-            </label>
-            <label className={styles.label}>
-              Meta Description
-              <textarea
-                value={form.meta_description ?? ""}
-                onChange={(e) => updateField("meta_description", e.target.value)}
-                className={styles.input}
-                rows={3}
-                maxLength={320}
-                placeholder="до ~160 символов"
-              />
-            </label>
-            <label className={styles.label}>
-              H1
-              <input
-                value={form.meta_h1 ?? ""}
-                onChange={(e) => updateField("meta_h1", e.target.value)}
-                className={styles.input}
-              />
-            </label>
-            <label className={styles.label}>
-              Canonical URL
-              <input
-                value={form.canonical ?? ""}
-                onChange={(e) => updateField("canonical", e.target.value)}
-                className={styles.input}
-                placeholder="https://example.com/"
-              />
-            </label>
-            <label className={styles.label}>
-              OG image URL
-              <input
-                value={form.og_image ?? ""}
-                onChange={(e) => updateField("og_image", e.target.value)}
-                className={styles.input}
-                placeholder="/og.png или https://..."
-              />
-            </label>
-          </section>
+          <>
+            <section className={styles.panel}>
+              <div className={styles.kicker}>Заголовок</div>
+              <div className={styles.row}>
+                <label className={styles.label}>
+                  Top
+                  <input
+                    value={titleTop ?? ""}
+                    onChange={(e) => setTitleTop(e.target.value)}
+                    className={styles.input}
+                  />
+                </label>
+                <label className={styles.label}>
+                  Highlight
+                  <input
+                    value={titleHighlight ?? ""}
+                    onChange={(e) => setTitleHighlight(e.target.value)}
+                    className={styles.input}
+                  />
+                </label>
+              </div>
+            </section>
+
+            <section className={styles.panel}>
+              <div className={styles.kicker}>Список</div>
+              <div className={styles.itemsGrid}>
+                {bullets.map((b, idx) => (
+                  <div key={idx} className={styles.itemCard}>
+                    <textarea
+                      value={b ?? ""}
+                      onChange={(e) => updateBullet(idx, e.target.value)}
+                      className={styles.input}
+                      rows={2}
+                    />
+                    <div className={styles.actions}>
+                      <button
+                        type="button"
+                        className={styles.linkBtn}
+                        onClick={() => removeBullet(idx)}
+                      >
+                        Удалить
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <button type="button" onClick={addBullet} className={styles.secondaryBtn}>
+                Добавить пункт
+              </button>
+            </section>
+
+            <section className={styles.panel}>
+              <div className={styles.kicker}>CTA</div>
+              <label className={styles.label}>
+                CTA текст
+                <input
+                  value={cta ?? ""}
+                  onChange={(e) => setCta(e.target.value)}
+                  className={styles.input}
+                  placeholder="Reserve your spot"
+                />
+              </label>
+            </section>
+          </>
         )}
 
         {error && <div className={styles.error}>{error}</div>}

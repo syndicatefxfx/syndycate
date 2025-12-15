@@ -17,7 +17,7 @@ export default function BlogPage() {
           </div>
         </header>
 
-        <section className={styles.card}>
+        <section className={styles.panel}>
           <div className={styles.muted}>
             Раздел в разработке. План: список статей со статусами, датой, SEO-полями и slug.
           </div>

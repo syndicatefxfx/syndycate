@@ -1,19 +1,18 @@
 "use client";
 import styles from "@/styles/HeroSection.module.css";
-import { useCallback, useEffect, useState } from "react";
-import { useDictionary } from "./LanguageProvider";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useLanguage } from "./LanguageProvider";
+import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 
 export default function HeroSection() {
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0 });
   const [arrowUp, setArrowUp] = useState(false);
-  const dictionary = useDictionary();
-  const heroCopy = dictionary.hero ?? {};
-  const timerCopy = heroCopy.timer ?? {};
-  const headingCopy = heroCopy.heading ?? {};
-  const [highlightFirst = "", highlightSecond = ""] =
-    headingCopy.highlightLines ?? [];
-  const subheadingLines = heroCopy.subheadingLines ?? [];
-  const ctaText = heroCopy.cta ?? "";
+  const { language } = useLanguage();
+  const [heroData, setHeroData] = useState(null);
+  const supabaseClient = useMemo(
+    () => createBrowserSupabaseClient(),
+    []
+  );
 
   useEffect(() => {
     const targetDate = new Date("2026-01-20T00:00:00");
@@ -38,6 +37,63 @@ export default function HeroSection() {
 
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    if (!supabaseClient) return;
+
+    supabaseClient
+      .from("hero_sections")
+      .select(
+        `
+          timer_label,
+          timer_days_label,
+          timer_hours_label,
+          timer_minutes_label,
+          heading_top,
+          heading_highlight_first,
+          heading_highlight_second,
+          heading_bottom,
+          subheading_lines,
+          cta
+        `
+      )
+      .eq("locale", language)
+      .eq("status", "published")
+      .limit(1)
+      .then(({ data, error }) => {
+        if (error) {
+          console.error("[Hero] supabase error", error.message || error);
+          return;
+        }
+        const record = data?.[0];
+        if (record) {
+          setHeroData(record);
+        } else {
+          console.warn("[Hero] no hero record for locale", language);
+        }
+      });
+  }, [language, supabaseClient]);
+
+  const timerCopy = {
+    label: heroData?.timer_label ?? "Time until start:",
+    days: heroData?.timer_days_label ?? "D",
+    hours: heroData?.timer_hours_label ?? "H",
+    minutes: heroData?.timer_minutes_label ?? "M",
+  };
+
+  const headingCopy = {
+    topLine: heroData?.heading_top ?? "",
+    highlightLines: [
+      heroData?.heading_highlight_first ?? "",
+      heroData?.heading_highlight_second ?? "",
+    ],
+    bottomLine: heroData?.heading_bottom ?? "",
+  };
+
+  const [highlightFirst = "", highlightSecond = ""] =
+    headingCopy.highlightLines ?? [];
+  const subheadingLines = heroData?.subheading_lines ?? [];
+  const ctaText = heroData?.cta ?? "";
 
   useEffect(() => {
     const target = document.getElementById("next");

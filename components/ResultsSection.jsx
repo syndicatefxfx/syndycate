@@ -3,14 +3,21 @@ import Image from "next/image";
 import styles from "@/styles/ResultsSection.module.css";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useFloatingBlobs } from "@/lib/useFloatingBlobs";
-import { useDictionary } from "./LanguageProvider";
+import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
+import { useLanguage } from "./LanguageProvider";
 
 export default function ResultsSection() {
   const [arrowDown, setArrowDown] = useState(false);
+  const { language } = useLanguage();
+  const supabase = React.useMemo(() => createBrowserSupabaseClient(), []);
+  const [resultsCopy, setResultsCopy] = useState({
+    title: { top: "", highlight: "" },
+    bullets: [],
+    cta: "",
+  });
 
   const sectionRef = useRef(null);
   const gradRef = useRef(null);
-  const resultsCopy = useDictionary().results ?? {};
   const bullets = resultsCopy.bullets ?? [];
 
   useFloatingBlobs(sectionRef, [gradRef], {
@@ -43,6 +50,33 @@ export default function ResultsSection() {
     obs.observe(sectionRef.current);
     return () => obs.disconnect();
   }, []);
+
+  useEffect(() => {
+    if (!supabase) return;
+    supabase
+      .from("results_sections")
+      .select("title_top, title_highlight, bullets, cta")
+      .eq("locale", language)
+      .eq("status", "published")
+      .limit(1)
+      .then(({ data, error }) => {
+        if (error) {
+          console.error("[Results] supabase error", error.message || error);
+          return;
+        }
+        const record = data?.[0];
+        if (record) {
+          setResultsCopy({
+            title: {
+              top: record.title_top ?? "",
+              highlight: record.title_highlight ?? "",
+            },
+            bullets: record.bullets ?? [],
+            cta: record.cta ?? "",
+          });
+        }
+      });
+  }, [language, supabase]);
 
   return (
     <section className={styles.section} id="results" ref={sectionRef}>

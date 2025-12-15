@@ -1,12 +1,39 @@
 "use client";
-import { useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import styles from "@/styles/FaqSection.module.css";
-import { useDictionary } from "./LanguageProvider";
+import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
+import { useLanguage } from "./LanguageProvider";
 
 export default function FaqSection() {
   const [openId, setOpenId] = useState(null);
-  const faqCopy = useDictionary().faq ?? {};
+  const { language } = useLanguage();
+  const supabase = useMemo(() => createBrowserSupabaseClient(), []);
+  const [faqCopy, setFaqCopy] = useState({ tag: "FAQ", items: [] });
   const faqs = faqCopy.items ?? [];
+
+  useEffect(() => {
+    if (!supabase) return;
+    supabase
+      .from("faq_sections")
+      .select("tag, items:faq_items(question, answer)")
+      .eq("locale", language)
+      .eq("status", "published")
+      .order("ordering", { foreignTable: "faq_items", ascending: true })
+      .limit(1)
+      .then(({ data, error }) => {
+        if (error) {
+          console.error("[FAQ] supabase error", error.message || error);
+          return;
+        }
+        const record = data?.[0];
+        if (record) {
+          setFaqCopy({
+            tag: record.tag ?? "FAQ",
+            items: record.items ?? [],
+          });
+        }
+      });
+  }, [language, supabase]);
 
   return (
     <section className={styles.section} id="faq">

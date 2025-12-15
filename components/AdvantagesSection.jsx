@@ -2,15 +2,60 @@
 import Image from "next/image";
 import styles from "@/styles/AdvantagesSection.module.css";
 import { useFloatingBlobs } from "@/lib/useFloatingBlobs";
-import { useRef } from "react";
-import { useDictionary } from "./LanguageProvider";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useLanguage } from "./LanguageProvider";
+import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 
 export default function AdvantagesSection() {
   const sectionRef = useRef(null);
   const headerRowRef = useRef(null);
   const gradRef = useRef(null);
-  const dictionary = useDictionary();
-  const advantages = dictionary.advantages ?? {};
+  const { language } = useLanguage();
+  const supabase = useMemo(() => createBrowserSupabaseClient(), []);
+  const [advantages, setAdvantages] = useState({
+    tag: "",
+    title: [],
+    quote: "",
+    lead: "",
+    cards: [],
+  });
+
+  useEffect(() => {
+    if (!supabase) return;
+    supabase
+      .from("advantages_sections")
+      .select(
+        `
+          tag,
+          title_first,
+          title_second,
+          quote,
+          lead,
+          cards:advantages_cards(id, ordering, value, description)
+        `
+      )
+      .eq("locale", language)
+      .eq("status", "published")
+      .order("ordering", { foreignTable: "advantages_cards", ascending: true })
+      .limit(1)
+      .then(({ data, error }) => {
+        if (error) {
+          console.error("[Advantages] supabase error", error.message || error);
+          return;
+        }
+        const record = data?.[0];
+        if (record) {
+          setAdvantages({
+            tag: record.tag ?? "",
+            title: [record.title_first ?? "", record.title_second ?? ""],
+            quote: record.quote ?? "",
+            lead: record.lead ?? "",
+            cards: record.cards ?? [],
+          });
+        }
+      });
+  }, [language, supabase]);
+
   const cards = advantages.cards ?? [];
   const titleLines = advantages.title ?? [];
 
@@ -144,7 +189,7 @@ export default function AdvantagesSection() {
               <span className={styles.value}>{c.value}</span>
               <p
                 className={styles.desc}
-                dangerouslySetInnerHTML={{ __html: c.desc || "" }}
+                dangerouslySetInnerHTML={{ __html: c.description || "" }}
               />
             </div>
           ))}

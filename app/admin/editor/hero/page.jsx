@@ -1,0 +1,349 @@
+"use client";
+
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import styles from "@/styles/Admin.module.css";
+import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
+
+const locales = [
+  { code: "en", label: "English" },
+  { code: "he", label: "Hebrew" },
+];
+
+export default function HeroEditorPage() {
+  const supabase = useMemo(() => createBrowserSupabaseClient(), []);
+  const [session, setSession] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [locale, setLocale] = useState("en");
+  const [form, setForm] = useState({
+    heading_top: "",
+    heading_highlight_first: "",
+    heading_highlight_second: "",
+    heading_bottom: "",
+    text_above_button: "",
+    cta: "",
+  });
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!supabase) {
+      setError("Supabase env vars не заданы");
+      setLoading(false);
+      return;
+    }
+
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session);
+      setLoading(false);
+    });
+
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      (_event, newSession) => setSession(newSession)
+    );
+    return () => {
+      listener?.subscription.unsubscribe();
+    };
+  }, [supabase]);
+
+  useEffect(() => {
+    if (!session || !supabase) return;
+    setLoading(true);
+    setError("");
+    setMessage("");
+
+    supabase
+      .from("hero_sections")
+      .select(
+        `
+          id,
+          heading_top,
+          heading_highlight_first,
+          heading_highlight_second,
+          heading_bottom,
+          subheading_lines,
+          cta
+        `
+      )
+      .eq("locale", locale)
+      .limit(1)
+      .then(({ data, error: fetchError }) => {
+        if (fetchError) {
+          setError(fetchError.message);
+          setLoading(false);
+          return;
+        }
+
+        const record = data?.[0];
+        if (record) {
+          setForm({
+            heading_top: record.heading_top ?? "",
+            heading_highlight_first: record.heading_highlight_first ?? "",
+            heading_highlight_second: record.heading_highlight_second ?? "",
+            heading_bottom: record.heading_bottom ?? "",
+            text_above_button: (record.subheading_lines ?? [])[0] ?? "",
+            cta: record.cta ?? "",
+            timer_label: record.timer_label ?? "",
+            timer_days_label: record.timer_days_label ?? "D",
+            timer_hours_label: record.timer_hours_label ?? "H",
+            timer_minutes_label: record.timer_minutes_label ?? "M",
+            sale_badge: record.sale_badge ?? "",
+          });
+        } else {
+          setForm({
+            heading_top: "",
+            heading_highlight_first: "",
+          heading_highlight_second: "",
+          heading_bottom: "",
+          text_above_button: "",
+          cta: "",
+        });
+      }
+        setLoading(false);
+      });
+  }, [locale, session, supabase]);
+
+  const handleLogin = async (event) => {
+    event.preventDefault();
+    setError("");
+    setMessage("");
+
+    const formData = new FormData(event.currentTarget);
+    const email = formData.get("email");
+    const password = formData.get("password");
+
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    if (signInError) {
+      setError(signInError.message);
+    } else {
+      setMessage("Вход выполнен");
+    }
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setSession(null);
+  };
+
+  const updateField = (key, value) => {
+    setForm((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const addSubheading = () => {
+    setForm((prev) => ({
+      ...prev,
+      subheading_lines: [...(prev.subheading_lines ?? []), ""],
+    }));
+  };
+
+  const updateSubheading = (index, value) => {
+    setForm((prev) => {
+      const lines = [...(prev.subheading_lines ?? [])];
+      lines[index] = value;
+      return { ...prev, subheading_lines: lines };
+    });
+  };
+
+  const removeSubheading = (index) => {
+    setForm((prev) => {
+      const lines = [...(prev.subheading_lines ?? [])].filter(
+        (_line, i) => i !== index
+      );
+      return { ...prev, subheading_lines: lines };
+    });
+  };
+
+  const saveSection = async () => {
+    if (!supabase || !session) return;
+    setSaving(true);
+    setError("");
+    setMessage("");
+
+    const { error: upsertError } = await supabase
+      .from("hero_sections")
+      .upsert(
+        {
+          locale,
+          status: "published",
+          heading_top: form.heading_top,
+          heading_highlight_first: form.heading_highlight_first,
+          heading_highlight_second: form.heading_highlight_second,
+          heading_bottom: form.heading_bottom,
+          subheading_lines: form.text_above_button
+            ? [form.text_above_button]
+            : [],
+          cta: form.cta,
+        },
+        { onConflict: "locale" }
+      );
+
+    if (upsertError) {
+      setError(upsertError.message);
+    } else {
+      setMessage("Сохранено");
+    }
+    setSaving(false);
+  };
+
+  if (!supabase) {
+    return (
+      <main className={styles.page}>
+        <div className={styles.panel}>Проверьте Supabase env переменные.</div>
+      </main>
+    );
+  }
+
+  if (!session) {
+    return (
+      <main className={styles.page}>
+        <div className={styles.container}>
+          <div className={styles.panel}>
+            <div className={styles.breadcrumbs}>
+              <Link href="/admin">← Назад к разделам</Link>
+            </div>
+            <h1 className={styles.title}>Admin login</h1>
+            <form onSubmit={handleLogin} className={styles.form}>
+              <label className={styles.label}>
+                Email
+                <input name="email" type="email" required className={styles.input} />
+              </label>
+              <label className={styles.label}>
+                Password
+                <input
+                  name="password"
+                  type="password"
+                  required
+                  className={styles.input}
+                />
+              </label>
+              <button type="submit" className={styles.primaryBtn}>
+                Войти
+              </button>
+            </form>
+            {error && <div className={styles.error}>{error}</div>}
+            {message && <div className={styles.success}>{message}</div>}
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  return (
+    <main className={styles.page}>
+      <div className={styles.container}>
+        <header className={styles.topBar}>
+          <div>
+            <div className={styles.kicker}>Editor</div>
+            <div className={styles.heading}>HERO</div>
+            <div className={styles.breadcrumbs}>
+              <Link href="/admin/editor">← Ко всем блокам</Link>
+            </div>
+          </div>
+          <div className={styles.actions}>
+            <select
+              value={locale}
+              onChange={(e) => setLocale(e.target.value)}
+              className={styles.select}
+            >
+              {locales.map((l) => (
+                <option key={l.code} value={l.code}>
+                  {l.label}
+                </option>
+              ))}
+            </select>
+            <button onClick={saveSection} className={styles.primaryBtn} disabled={saving}>
+              {saving ? "Сохраняю..." : "Сохранить"}
+            </button>
+            <button onClick={handleLogout} className={styles.secondaryBtn}>
+              Выйти
+            </button>
+          </div>
+        </header>
+
+        {loading ? (
+          <div className={styles.panel}>Загрузка...</div>
+        ) : (
+        <>
+            <section className={styles.panel}>
+              <div className={styles.kicker}>Заголовок</div>
+              <div className={styles.row}>
+                <label className={styles.label}>
+                  Верхняя строка
+                  <input
+                    value={form.heading_top ?? ""}
+                    onChange={(e) => updateField("heading_top", e.target.value)}
+                    className={styles.input}
+                    placeholder="THE"
+                  />
+                </label>
+                <label className={styles.label}>
+                  Highlight 1
+                  <input
+                    value={form.heading_highlight_first ?? ""}
+                    onChange={(e) =>
+                      updateField("heading_highlight_first", e.target.value)
+                    }
+                    className={styles.input}
+                    placeholder="NEW ERA"
+                  />
+                </label>
+                <label className={styles.label}>
+                  Highlight 2
+                  <input
+                    value={form.heading_highlight_second ?? ""}
+                    onChange={(e) =>
+                      updateField("heading_highlight_second", e.target.value)
+                    }
+                    className={styles.input}
+                    placeholder="OF TRADING"
+                  />
+                </label>
+                <label className={styles.label}>
+                  Нижняя строка
+                  <input
+                    value={form.heading_bottom ?? ""}
+                    onChange={(e) => updateField("heading_bottom", e.target.value)}
+                    className={styles.input}
+                    placeholder="IN ISRAEL"
+                  />
+                </label>
+              </div>
+            </section>
+
+            <section className={styles.panel}>
+              <div className={styles.kicker}>Текст и CTA</div>
+              <label className={styles.label}>
+                Текст над кнопкой
+                <textarea
+                  value={form.text_above_button ?? ""}
+                  onChange={(e) => updateField("text_above_button", e.target.value)}
+                  className={styles.input}
+                  rows={2}
+                  placeholder="CLOSED-COMMUNITY TRAINING FOR THOSE WHO WANT TO MASTER THE MARKET"
+                />
+              </label>
+              <div className={styles.row}>
+                <label className={styles.label}>
+                  CTA
+                  <input
+                    value={form.cta ?? ""}
+                    onChange={(e) => updateField("cta", e.target.value)}
+                    className={styles.input}
+                    placeholder="Reserve your spot"
+                  />
+                </label>
+              </div>
+            </section>
+          </>
+        )}
+
+        {error && <div className={styles.error}>{error}</div>}
+        {message && <div className={styles.success}>{message}</div>}
+      </div>
+    </main>
+  );
+}
