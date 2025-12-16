@@ -22,15 +22,14 @@ const LanguageContext = createContext({
 const STORAGE_KEY = "sndct-language";
 
 export function LanguageProvider({ children }) {
-  const [language, setLanguage] = useState(DEFAULT_LANGUAGE);
-
-  useEffect(() => {
-    const stored =
-      typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEY) : null;
-    if (stored && dictionaries[stored]) {
-      setLanguage(stored);
-    }
-  }, []);
+  const [language, setLanguage] = useState(() => {
+    if (typeof window === "undefined") return DEFAULT_LANGUAGE;
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored && dictionaries[stored]) return stored;
+    const browserLang = (navigator.language || "").slice(0, 2).toLowerCase();
+    if (browserLang && dictionaries[browserLang]) return browserLang;
+    return DEFAULT_LANGUAGE;
+  });
 
   useEffect(() => {
     if (typeof window === "undefined") {

@@ -57,6 +57,34 @@ export default function RootLayout({ children }) {
       <body
         className={`${stencil.variable} ${inter.variable} ${anton.variable} ${blackOps.variable}`}
       >
+        <Script
+          id="language-bootstrap"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var key = "sndct-language";
+                  var stored = window.localStorage.getItem(key);
+                  var lang = stored && (stored === "en" || stored === "he") ? stored : "he";
+                  var isRtl = lang === "he";
+                  var doc = document.documentElement;
+                  doc.lang = lang;
+                  doc.dir = isRtl ? "rtl" : "ltr";
+                  doc.classList.toggle("rtl", isRtl);
+                  var body = document.body;
+                  if (body) {
+                    body.lang = lang;
+                    body.dir = doc.dir;
+                    body.classList.toggle("rtl", isRtl);
+                  }
+                } catch (e) {
+                  // ignore bootstrap errors
+                }
+              })();
+            `,
+          }}
+        />
         <LanguageProvider>
           {children}
           <IntercomMessenger />
