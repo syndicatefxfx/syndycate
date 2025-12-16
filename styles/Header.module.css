@@ -44,7 +44,8 @@
   margin-right: 38px;
 }
 
-.nav button {
+.nav button,
+.nav a {
   font-family: var(--font-inter);
   font-weight: 400;
   font-size: 18px;
@@ -68,11 +69,17 @@
 .button3 {
   padding: 10px 37px;
 }
+.button4 {
+  padding: 10px 20px;
+}
 
 /* ховер эффекты для кнопок навигации */
 .nav button:hover,
 .nav button:focus,
-.nav button:active {
+.nav button:active,
+.nav a:hover,
+.nav a:focus,
+.nav a:active {
   color: var(--color-primary); /* цвет текста на primary */
   border-color: var(--color-primary); /* цвет бордера на primary */
   cursor: pointer !important; /* дополнительная гарантия курсора */

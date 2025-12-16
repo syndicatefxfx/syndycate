@@ -2,6 +2,7 @@
 import { useEffect, useState, useCallback } from "react";
 import styles from "@/styles/Header.module.css";
 import Image from "next/image";
+import Link from "next/link";
 import {
   supportedLanguages,
   useDictionary,
@@ -17,6 +18,7 @@ export default function Header() {
     { id: "program", label: navLabels.program, className: styles.button1 },
     { id: "tariffs", label: navLabels.tariffs, className: styles.button2 },
     { id: "faq", label: navLabels.faq, className: styles.button3 },
+    { id: "blog", label: navLabels.blog || "BLOG", className: styles.button4, href: "/blog" },
   ];
 
   // блокируем прокрутку фона, когда открыт оверлей
@@ -38,17 +40,20 @@ export default function Header() {
   // плавный скролл к секции
   const goTo = useCallback((id) => {
     const el = document.getElementById(id) || document.querySelector(id);
-    if (!el) return;
-    setOpen(false);
-    // ждём, пока меню заедет назад (анимация 450ms), и скроллим
-    setTimeout(() => {
-      el.scrollIntoView({ behavior: "smooth", block: "start" });
-    }, 160);
+    if (el) {
+      setOpen(false);
+      setTimeout(() => {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 160);
+    } else {
+      // если секции нет (например, на странице блога), отправляем на главную с якорем
+      window.location.href = `/#${id}`;
+    }
   }, []);
 
   return (
     <header className={styles.header}>
-      <div className={styles.logoContainer}>
+      <Link href="/" className={styles.logoContainer} aria-label="Go to homepage">
         <Image
           src="/logo.svg"
           alt="SNDCT Logo"
@@ -57,21 +62,27 @@ export default function Header() {
           className={styles.logoImage}
         />
         <div className={styles.logo}>SNDCT</div>
-      </div>
+      </Link>
       <div className={styles.line} />
 
       {/* десктопная навигация (>1280px) */}
       <div className={styles.circles}>
         <nav className={styles.nav}>
           {navItems.map(({ id, label, className }) => (
-            <button
-              key={id}
-              type="button"
-              className={className}
-              onClick={() => goTo(id)}
-            >
-              {label}
-            </button>
+            label === "BLOG" || id === "blog" ? (
+              <Link key={id} href="/blog" className={className}>
+                {label}
+              </Link>
+            ) : (
+              <button
+                key={id}
+                type="button"
+                className={className}
+                onClick={() => goTo(id)}
+              >
+                {label}
+              </button>
+            )
           ))}
         </nav>
         <div className={styles.languageSwitch}>
@@ -155,11 +166,17 @@ export default function Header() {
         </div>
 
         <nav className={styles.overlayNav}>
-          {navItems.map(({ id, label }) => (
-            <button key={id} type="button" onClick={() => goTo(id)}>
-              {label}
-            </button>
-          ))}
+          {navItems.map(({ id, label, href }) =>
+            href ? (
+              <Link key={id} href={href} onClick={() => setOpen(false)}>
+                {label}
+              </Link>
+            ) : (
+              <button key={id} type="button" onClick={() => goTo(id)}>
+                {label}
+              </button>
+            )
+          )}
         </nav>
         <div className={styles.overlayLangSwitch}>
           {supportedLanguages.map(({ code, label }) => (
