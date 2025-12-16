@@ -1,4 +1,5 @@
 import Header from "@/components/Header";
+import FooterSection from "@/components/FooterSection";
 import styles from "@/styles/BlogPost.module.css";
 import Image from "next/image";
 import Link from "next/link";
@@ -56,6 +57,7 @@ export default async function BlogPostPage({ params }) {
           </Link>
         </div>
       </article>
+      <FooterSection />
     </main>
   );
 }

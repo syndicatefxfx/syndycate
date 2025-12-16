@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import styles from "@/styles/Admin.module.css";
-import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
+import { useAdminAuth } from "@/components/AdminAuthProvider";
 
 const locales = [
   { code: "en", label: "English" },
@@ -15,8 +15,7 @@ const pages = [
 ];
 
 export default function SeoPage() {
-  const supabase = useMemo(() => createBrowserSupabaseClient(), []);
-  const [session, setSession] = useState(null);
+  const { supabase, session, loading: authLoading, logout } = useAdminAuth();
   const [loading, setLoading] = useState(true);
   const [locale, setLocale] = useState("en");
   const [pageSlug, setPageSlug] = useState("home");
@@ -32,27 +31,7 @@ export default function SeoPage() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (!supabase) {
-      setError("Supabase env vars не заданы");
-      setLoading(false);
-      return;
-    }
-
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-      setLoading(false);
-    });
-
-    const { data: listener } = supabase.auth.onAuthStateChange(
-      (_event, newSession) => setSession(newSession)
-    );
-    return () => {
-      listener?.subscription.unsubscribe();
-    };
-  }, [supabase]);
-
-  useEffect(() => {
-    if (!session || !supabase) return;
+    if (authLoading || !session || !supabase) return;
     setLoading(true);
     setError("");
     setMessage("");
@@ -80,32 +59,7 @@ export default function SeoPage() {
         });
         setLoading(false);
       });
-  }, [locale, pageSlug, session, supabase]);
-
-  const handleLogin = async (event) => {
-    event.preventDefault();
-    setError("");
-    setMessage("");
-
-    const formData = new FormData(event.currentTarget);
-    const email = formData.get("email");
-    const password = formData.get("password");
-
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    if (signInError) {
-      setError(signInError.message);
-    } else {
-      setMessage("Вход выполнен");
-    }
-  };
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    setSession(null);
-  };
+  }, [authLoading, locale, pageSlug, session, supabase]);
 
   const updateField = (key, value) => {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -141,45 +95,10 @@ export default function SeoPage() {
     setSaving(false);
   };
 
-  if (!supabase) {
+  if (authLoading || !session || !supabase) {
     return (
       <main className={styles.page}>
-        <div className={styles.panel}>Проверьте Supabase env переменные.</div>
-      </main>
-    );
-  }
-
-  if (!session) {
-    return (
-      <main className={styles.page}>
-        <div className={styles.container}>
-          <div className={styles.panel}>
-            <div className={styles.breadcrumbs}>
-              <Link href="/admin">← Ко всем разделам</Link>
-            </div>
-            <h1 className={styles.title}>Admin login</h1>
-            <form onSubmit={handleLogin} className={styles.form}>
-              <label className={styles.label}>
-                Email
-                <input name="email" type="email" required className={styles.input} />
-              </label>
-              <label className={styles.label}>
-                Password
-                <input
-                  name="password"
-                  type="password"
-                  required
-                  className={styles.input}
-                />
-              </label>
-              <button type="submit" className={styles.primaryBtn}>
-                Войти
-              </button>
-            </form>
-            {error && <div className={styles.error}>{error}</div>}
-            {message && <div className={styles.success}>{message}</div>}
-          </div>
-        </div>
+        <div className={styles.panel}>Загрузка...</div>
       </main>
     );
   }
@@ -221,7 +140,7 @@ export default function SeoPage() {
             <button onClick={savePage} className={styles.primaryBtn} disabled={saving}>
               {saving ? "Сохраняю..." : "Сохранить"}
             </button>
-            <button onClick={handleLogout} className={styles.secondaryBtn}>
+            <button onClick={logout} className={styles.secondaryBtn}>
               Выйти
             </button>
           </div>
