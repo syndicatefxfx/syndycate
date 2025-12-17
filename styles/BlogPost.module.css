@@ -6,7 +6,7 @@
     #050505 40%,
     #020202 100%
   );
-  color: var(--color-secondary);
+  background: var(--color-dark-secondary);
   --header-height: 82px;
 }
 
@@ -89,4 +89,32 @@
   color: var(--color-primary);
   text-decoration: none;
   font-weight: 700;
+}
+
+.skeletonLine {
+  display: block;
+  height: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  width: 100%;
+}
+
+.skeletonBox {
+  background: linear-gradient(120deg, #1a1a1a 25%, #222 50%, #1a1a1a 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.3s infinite;
+}
+
+.paragraphSkeleton {
+  height: 14px;
+  margin-bottom: 10px;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }

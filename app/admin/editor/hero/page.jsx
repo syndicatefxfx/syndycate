@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import styles from "@/styles/Admin.module.css";
 import { useAdminAuth } from "@/components/AdminAuthProvider";
+import { useAdminDict } from "@/components/AdminLocaleProvider";
+import { useAdminLocale } from "@/components/AdminLocaleProvider";
 
 const locales = [
   { code: "en", label: "English" },
@@ -12,6 +14,9 @@ const locales = [
 
 export default function HeroEditorPage() {
   const { supabase, session, loading: authLoading, logout } = useAdminAuth();
+  const dict = useAdminDict();
+  const { language } = useAdminLocale();
+  const t = (ru, en) => (language === "en" ? en : ru);
   const [loading, setLoading] = useState(true);
   const [locale, setLocale] = useState("en");
   const [form, setForm] = useState({
@@ -73,12 +78,12 @@ export default function HeroEditorPage() {
           setForm({
             heading_top: "",
             heading_highlight_first: "",
-          heading_highlight_second: "",
-          heading_bottom: "",
-          text_above_button: "",
-          cta: "",
-        });
-      }
+            heading_highlight_second: "",
+            heading_bottom: "",
+            text_above_button: "",
+            cta: "",
+          });
+        }
         setLoading(false);
       });
   }, [locale, session, supabase]);
@@ -117,26 +122,26 @@ export default function HeroEditorPage() {
     setError("");
     setMessage("");
 
-    const { error: upsertError } = await supabase
-      .from("hero_sections")
-      .upsert(
-        {
-          locale,
-          status: "published",
-          heading_top: form.heading_top,
-          heading_highlight_first: form.heading_highlight_first,
-          heading_highlight_second: form.heading_highlight_second,
-          heading_bottom: form.heading_bottom,
-          subheading_lines: form.text_above_button ? [form.text_above_button] : [],
-          cta: form.cta,
-        },
-        { onConflict: "locale" }
-      );
+    const { error: upsertError } = await supabase.from("hero_sections").upsert(
+      {
+        locale,
+        status: "published",
+        heading_top: form.heading_top,
+        heading_highlight_first: form.heading_highlight_first,
+        heading_highlight_second: form.heading_highlight_second,
+        heading_bottom: form.heading_bottom,
+        subheading_lines: form.text_above_button
+          ? [form.text_above_button]
+          : [],
+        cta: form.cta,
+      },
+      { onConflict: "locale" }
+    );
 
     if (upsertError) {
       setError(upsertError.message);
     } else {
-      setMessage("Сохранено");
+      setMessage(dict.common.saved);
     }
     setSaving(false);
   };
@@ -144,7 +149,7 @@ export default function HeroEditorPage() {
   if (authLoading || !session || !supabase) {
     return (
       <main className={styles.page}>
-        <div className={styles.panel}>Загрузка...</div>
+        <div className={styles.panel}>{dict.common.loading}</div>
       </main>
     );
   }
@@ -157,7 +162,7 @@ export default function HeroEditorPage() {
             <div className={styles.kicker}>Editor</div>
             <div className={styles.heading}>HERO</div>
             <div className={styles.breadcrumbs}>
-              <Link href="/admin/editor">← Ко всем блокам</Link>
+              <Link href="/admin/editor">{dict.common.backBlocks}</Link>
             </div>
           </div>
           <div className={styles.actions}>
@@ -172,24 +177,28 @@ export default function HeroEditorPage() {
                 </option>
               ))}
             </select>
-            <button onClick={saveSection} className={styles.primaryBtn} disabled={saving}>
-              {saving ? "Сохраняю..." : "Сохранить"}
+            <button
+              onClick={saveSection}
+              className={styles.primaryBtn}
+              disabled={saving}
+            >
+              {saving ? dict.common.saving : dict.common.save}
             </button>
             <button onClick={logout} className={styles.secondaryBtn}>
-              Выйти
+              {dict.common.logout}
             </button>
           </div>
         </header>
 
         {loading ? (
-          <div className={styles.panel}>Загрузка...</div>
+          <div className={styles.panel}>{dict.common.loading}</div>
         ) : (
-        <>
+          <>
             <section className={styles.panel}>
-              <div className={styles.kicker}>Заголовок</div>
+              <div className={styles.kicker}>{dict.editor.heading}</div>
               <div className={styles.row}>
                 <label className={styles.label}>
-                  Верхняя строка
+                  {dict.editor.topLine}
                   <input
                     value={form.heading_top ?? ""}
                     onChange={(e) => updateField("heading_top", e.target.value)}
@@ -220,10 +229,12 @@ export default function HeroEditorPage() {
                   />
                 </label>
                 <label className={styles.label}>
-                  Нижняя строка
+                  {dict.editor.bottomLine}
                   <input
                     value={form.heading_bottom ?? ""}
-                    onChange={(e) => updateField("heading_bottom", e.target.value)}
+                    onChange={(e) =>
+                      updateField("heading_bottom", e.target.value)
+                    }
                     className={styles.input}
                     placeholder="IN ISRAEL"
                   />
@@ -232,12 +243,14 @@ export default function HeroEditorPage() {
             </section>
 
             <section className={styles.panel}>
-              <div className={styles.kicker}>Текст и CTA</div>
+              <div className={styles.kicker}>{dict.editor.copyCta}</div>
               <label className={styles.label}>
-                Текст над кнопкой
+                {dict.editor.copyAboveButton}
                 <textarea
                   value={form.text_above_button ?? ""}
-                  onChange={(e) => updateField("text_above_button", e.target.value)}
+                  onChange={(e) =>
+                    updateField("text_above_button", e.target.value)
+                  }
                   className={styles.input}
                   rows={2}
                   placeholder="CLOSED-COMMUNITY TRAINING FOR THOSE WHO WANT TO MASTER THE MARKET"

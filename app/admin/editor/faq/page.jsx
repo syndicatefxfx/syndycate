@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import styles from "@/styles/Admin.module.css";
 import { useAdminAuth } from "@/components/AdminAuthProvider";
+import { useAdminDict } from "@/components/AdminLocaleProvider";
 
 const locales = [
   { code: "en", label: "English" },
@@ -12,6 +13,7 @@ const locales = [
 
 export default function FaqEditorPage() {
   const { supabase, session, loading: authLoading, logout } = useAdminAuth();
+  const dict = useAdminDict();
   const [loading, setLoading] = useState(true);
   const [locale, setLocale] = useState("en");
   const [tag, setTag] = useState("");
@@ -58,10 +60,7 @@ export default function FaqEditorPage() {
   }, [authLoading, locale, session, supabase]);
 
   const addItem = () => {
-    setItems((prev) => [
-      ...prev,
-      { id: null, question: "", answer: "" },
-    ]);
+    setItems((prev) => [...prev, { id: null, question: "", answer: "" }]);
   };
 
   const updateItem = (index, patch) => {
@@ -101,7 +100,7 @@ export default function FaqEditorPage() {
 
     const sectionId = upserted?.[0]?.id;
     if (!sectionId) {
-      setError("Не удалось получить id секции");
+      setError(dict.common.errorSectionId);
       setSaving(false);
       return;
     }
@@ -122,7 +121,7 @@ export default function FaqEditorPage() {
     if (insertError) {
       setError(insertError.message);
     } else {
-      setMessage("Сохранено");
+      setMessage(dict.common.saved);
     }
     setSaving(false);
   };
@@ -130,7 +129,7 @@ export default function FaqEditorPage() {
   if (authLoading || !session || !supabase) {
     return (
       <main className={styles.page}>
-        <div className={styles.panel}>Загрузка...</div>
+        <div className={styles.panel}>{dict.common.loading}</div>
       </main>
     );
   }
@@ -143,7 +142,7 @@ export default function FaqEditorPage() {
             <div className={styles.kicker}>Editor</div>
             <div className={styles.heading}>FAQ</div>
             <div className={styles.breadcrumbs}>
-              <Link href="/admin/editor">← Ко всем блокам</Link>
+              <Link href="/admin/editor">{dict.common.backBlocks}</Link>
             </div>
           </div>
           <div className={styles.actions}>
@@ -158,23 +157,27 @@ export default function FaqEditorPage() {
                 </option>
               ))}
             </select>
-            <button onClick={saveSection} className={styles.primaryBtn} disabled={saving}>
-              {saving ? "Сохраняю..." : "Сохранить"}
+            <button
+              onClick={saveSection}
+              className={styles.primaryBtn}
+              disabled={saving}
+            >
+              {saving ? dict.common.saving : dict.common.save}
             </button>
             <button onClick={logout} className={styles.secondaryBtn}>
-              Выйти
+              {dict.common.logout}
             </button>
           </div>
         </header>
 
         {loading ? (
-          <div className={styles.panel}>Загрузка...</div>
+          <div className={styles.panel}>{dict.common.loading}</div>
         ) : (
           <>
             <section className={styles.panel}>
-              <div className={styles.kicker}>Тег</div>
+              <div className={styles.kicker}>{dict.editor.tag}</div>
               <label className={styles.label}>
-                FAQ tag
+                {dict.editor.faqTag}
                 <input
                   value={tag ?? ""}
                   onChange={(e) => setTag(e.target.value)}
@@ -185,22 +188,24 @@ export default function FaqEditorPage() {
             </section>
 
             <section className={styles.panel}>
-              <div className={styles.kicker}>Вопросы</div>
+              <div className={styles.kicker}>{dict.editor.questions}</div>
               <div className={styles.itemsGrid}>
                 {items.map((it, idx) => (
                   <div key={idx} className={styles.itemCard}>
                     <div className={styles.itemHeader}>
-                      <div className={styles.itemIndex}>/{String(idx + 1).padStart(2, "0")}</div>
+                      <div className={styles.itemIndex}>
+                        /{String(idx + 1).padStart(2, "0")}
+                      </div>
                       <button
                         type="button"
                         className={styles.linkBtn}
                         onClick={() => removeItem(idx)}
                       >
-                        Удалить
+                        {dict.common.delete}
                       </button>
                     </div>
                     <label className={styles.label}>
-                      Вопрос
+                      {dict.editor.question}
                       <input
                         value={it.question ?? ""}
                         onChange={(e) =>
@@ -210,7 +215,7 @@ export default function FaqEditorPage() {
                       />
                     </label>
                     <label className={styles.label}>
-                      Ответ
+                      {dict.editor.answer}
                       <textarea
                         value={it.answer ?? ""}
                         onChange={(e) =>
@@ -223,8 +228,12 @@ export default function FaqEditorPage() {
                   </div>
                 ))}
               </div>
-              <button type="button" onClick={addItem} className={styles.secondaryBtn}>
-                Добавить вопрос
+              <button
+                type="button"
+                onClick={addItem}
+                className={styles.secondaryBtn}
+              >
+                {dict.common.addQuestion}
               </button>
             </section>
           </>

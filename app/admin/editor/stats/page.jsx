@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import styles from "@/styles/Admin.module.css";
 import { useAdminAuth } from "@/components/AdminAuthProvider";
+import { useAdminDict } from "@/components/AdminLocaleProvider";
+import { useAdminLocale } from "@/components/AdminLocaleProvider";
 
 const locales = [
   { code: "en", label: "English" },
@@ -12,6 +14,9 @@ const locales = [
 
 export default function StatsEditorPage() {
   const { supabase, session, loading: authLoading, logout } = useAdminAuth();
+  const dict = useAdminDict();
+  const { language } = useAdminLocale();
+  const t = (ru, en) => (language === "en" ? en : ru);
   const [loading, setLoading] = useState(true);
   const [locale, setLocale] = useState("en");
   const [section, setSection] = useState({
@@ -108,7 +113,7 @@ export default function StatsEditorPage() {
 
     const sectionId = upserted?.[0]?.id;
     if (!sectionId) {
-      setError("Не удалось получить id секции");
+      setError(dict.common.errorSectionId);
       setSaving(false);
       return;
     }
@@ -131,7 +136,7 @@ export default function StatsEditorPage() {
     if (insertError) {
       setError(insertError.message);
     } else {
-      setMessage("Сохранено");
+      setMessage(dict.common.saved);
     }
     setSaving(false);
   };
@@ -139,7 +144,7 @@ export default function StatsEditorPage() {
   if (authLoading || !session || !supabase) {
     return (
       <main className={styles.page}>
-        <div className={styles.panel}>Загрузка...</div>
+        <div className={styles.panel}>{dict.common.loading}</div>
       </main>
     );
   }
@@ -152,7 +157,7 @@ export default function StatsEditorPage() {
             <div className={styles.kicker}>Editor</div>
             <div className={styles.heading}>STATS</div>
             <div className={styles.breadcrumbs}>
-              <Link href="/admin/editor">← Ко всем блокам</Link>
+              <Link href="/admin/editor">{dict.common.backBlocks}</Link>
             </div>
           </div>
           <div className={styles.actions}>
@@ -167,24 +172,28 @@ export default function StatsEditorPage() {
                 </option>
               ))}
             </select>
-            <button onClick={saveSection} className={styles.primaryBtn} disabled={saving}>
-              {saving ? "Сохраняю..." : "Сохранить"}
+            <button
+              onClick={saveSection}
+              className={styles.primaryBtn}
+              disabled={saving}
+            >
+              {saving ? dict.common.saving : dict.common.save}
             </button>
             <button onClick={logout} className={styles.secondaryBtn}>
-              Выйти
+              {dict.common.logout}
             </button>
           </div>
         </header>
 
         {loading ? (
-          <div className={styles.panel}>Загрузка...</div>
+          <div className={styles.panel}>{dict.common.loading}</div>
         ) : (
           <>
             <section className={styles.panel}>
-              <div className={styles.kicker}>Секция</div>
+              <div className={styles.kicker}>{dict.editor.section}</div>
               <div className={styles.row}>
                 <label className={styles.label}>
-                  Tag
+                  {dict.editor.tag}
                   <input
                     value={section.tag ?? ""}
                     onChange={(e) => updateSection({ tag: e.target.value })}
@@ -193,7 +202,7 @@ export default function StatsEditorPage() {
                   />
                 </label>
                 <label className={styles.label}>
-                  Title primary
+                  {dict.editor.titlePrimary}
                   <input
                     value={section.title_primary ?? ""}
                     onChange={(e) =>
@@ -204,7 +213,7 @@ export default function StatsEditorPage() {
                   />
                 </label>
                 <label className={styles.label}>
-                  Title secondary
+                  {dict.editor.titleSecondary}
                   <input
                     value={section.title_secondary ?? ""}
                     onChange={(e) =>
@@ -216,7 +225,7 @@ export default function StatsEditorPage() {
                 </label>
               </div>
               <label className={styles.label}>
-                Description
+                {dict.editor.description}
                 <textarea
                   value={section.description ?? ""}
                   onChange={(e) =>
@@ -230,15 +239,17 @@ export default function StatsEditorPage() {
             </section>
 
             <section className={styles.panel}>
-              <div className={styles.kicker}>Элементы</div>
+              <div className={styles.kicker}>{dict.editor.items}</div>
               <div className={styles.itemsGrid}>
                 {items.map((item, index) => (
                   <div key={index} className={styles.itemCard}>
                     <div className={styles.itemHeader}>
-                      <div className={styles.itemIndex}>/{String(index + 1).padStart(2, "0")}</div>
+                      <div className={styles.itemIndex}>
+                        /{String(index + 1).padStart(2, "0")}
+                      </div>
                     </div>
                     <label className={styles.label}>
-                      Value
+                      {dict.editor.value}
                       <input
                         value={item.value ?? ""}
                         onChange={(e) =>
@@ -249,16 +260,18 @@ export default function StatsEditorPage() {
                       />
                     </label>
                     <label className={styles.label}>
-                      Note
+                      {dict.editor.note}
                       <input
                         value={item.note ?? ""}
-                        onChange={(e) => updateItem(index, { note: e.target.value })}
+                        onChange={(e) =>
+                          updateItem(index, { note: e.target.value })
+                        }
                         className={styles.input}
                         placeholder="(01)"
                       />
                     </label>
                     <label className={styles.label}>
-                      Description
+                      {dict.editor.description}
                       <textarea
                         value={item.description ?? ""}
                         onChange={(e) =>

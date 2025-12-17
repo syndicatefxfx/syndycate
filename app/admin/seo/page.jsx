@@ -4,18 +4,21 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import styles from "@/styles/Admin.module.css";
 import { useAdminAuth } from "@/components/AdminAuthProvider";
+import { useAdminDict } from "@/components/AdminLocaleProvider";
+import { useAdminLocale } from "@/components/AdminLocaleProvider";
 
 const locales = [
   { code: "en", label: "English" },
   { code: "he", label: "Hebrew" },
 ];
 
-const pages = [
-  { slug: "home", label: "Главная" },
-];
+const pages = [{ slug: "home", label: "Home" }];
 
 export default function SeoPage() {
   const { supabase, session, loading: authLoading, logout } = useAdminAuth();
+  const dict = useAdminDict();
+  const { language } = useAdminLocale();
+  const t = (ru, en) => (language === "en" ? en : ru);
   const [loading, setLoading] = useState(true);
   const [locale, setLocale] = useState("en");
   const [pageSlug, setPageSlug] = useState("home");
@@ -71,26 +74,24 @@ export default function SeoPage() {
     setError("");
     setMessage("");
 
-    const { error: upsertError } = await supabase
-      .from("pages")
-      .upsert(
-        {
-          slug: pageSlug,
-          locale,
-          status: "published",
-          meta_title: form.meta_title,
-          meta_description: form.meta_description,
-          meta_h1: form.meta_h1,
-          canonical: form.canonical,
-          og_image: form.og_image,
-        },
-        { onConflict: "slug,locale" }
-      );
+    const { error: upsertError } = await supabase.from("pages").upsert(
+      {
+        slug: pageSlug,
+        locale,
+        status: "published",
+        meta_title: form.meta_title,
+        meta_description: form.meta_description,
+        meta_h1: form.meta_h1,
+        canonical: form.canonical,
+        og_image: form.og_image,
+      },
+      { onConflict: "slug,locale" }
+    );
 
     if (upsertError) {
       setError(upsertError.message);
     } else {
-      setMessage("Сохранено");
+      setMessage(dict.common.saved);
     }
     setSaving(false);
   };
@@ -98,7 +99,7 @@ export default function SeoPage() {
   if (authLoading || !session || !supabase) {
     return (
       <main className={styles.page}>
-        <div className={styles.panel}>Загрузка...</div>
+        <div className={styles.panel}>{dict.common.loading}</div>
       </main>
     );
   }
@@ -109,9 +110,9 @@ export default function SeoPage() {
         <header className={styles.topBar}>
           <div>
             <div className={styles.kicker}>SEO</div>
-            <div className={styles.heading}>Meta настройки</div>
+            <div className={styles.heading}>Meta settings</div>
             <div className={styles.breadcrumbs}>
-              <Link href="/admin">← Ко всем разделам</Link>
+              <Link href="/admin">{dict.common.backSections}</Link>
             </div>
           </div>
           <div className={styles.actions}>
@@ -122,7 +123,11 @@ export default function SeoPage() {
             >
               {pages.map((p) => (
                 <option key={p.slug} value={p.slug}>
-                  {p.label}
+                  {typeof p.label === "string"
+                    ? p.label
+                    : language === "en"
+                    ? p.label.en
+                    : p.label.ru}
                 </option>
               ))}
             </select>
@@ -137,43 +142,49 @@ export default function SeoPage() {
                 </option>
               ))}
             </select>
-            <button onClick={savePage} className={styles.primaryBtn} disabled={saving}>
-              {saving ? "Сохраняю..." : "Сохранить"}
+            <button
+              onClick={savePage}
+              className={styles.primaryBtn}
+              disabled={saving}
+            >
+              {saving ? dict.common.saving : dict.common.save}
             </button>
             <button onClick={logout} className={styles.secondaryBtn}>
-              Выйти
+              {dict.common.logout}
             </button>
           </div>
         </header>
 
         {loading ? (
-          <div className={styles.panel}>Загрузка...</div>
+          <div className={styles.panel}>{dict.common.loading}</div>
         ) : (
           <section className={styles.panel}>
-            <div className={styles.kicker}>Главная</div>
+            <div className={styles.kicker}>{dict.seo.home}</div>
             <label className={styles.label}>
-              Meta Title
+              {dict.seo.metaTitle}
               <input
                 value={form.meta_title ?? ""}
                 onChange={(e) => updateField("meta_title", e.target.value)}
                 className={styles.input}
                 maxLength={160}
-                placeholder="до ~70 символов"
+                placeholder={dict.seo.upTo70Chars}
               />
             </label>
             <label className={styles.label}>
-              Meta Description
+              {dict.seo.metaDescription}
               <textarea
                 value={form.meta_description ?? ""}
-                onChange={(e) => updateField("meta_description", e.target.value)}
+                onChange={(e) =>
+                  updateField("meta_description", e.target.value)
+                }
                 className={styles.input}
                 rows={3}
                 maxLength={320}
-                placeholder="до ~160 символов"
+                placeholder={dict.seo.upTo160Chars}
               />
             </label>
             <label className={styles.label}>
-              H1
+              {dict.seo.h1}
               <input
                 value={form.meta_h1 ?? ""}
                 onChange={(e) => updateField("meta_h1", e.target.value)}
@@ -181,7 +192,7 @@ export default function SeoPage() {
               />
             </label>
             <label className={styles.label}>
-              Canonical URL
+              {dict.seo.canonicalUrl}
               <input
                 value={form.canonical ?? ""}
                 onChange={(e) => updateField("canonical", e.target.value)}
@@ -190,12 +201,12 @@ export default function SeoPage() {
               />
             </label>
             <label className={styles.label}>
-              OG image URL
+              {dict.seo.ogImageUrl}
               <input
                 value={form.og_image ?? ""}
                 onChange={(e) => updateField("og_image", e.target.value)}
                 className={styles.input}
-                placeholder="/og.png или https://..."
+                placeholder={dict.seo.ogImagePlaceholder}
               />
             </label>
           </section>

@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import styles from "@/styles/Admin.module.css";
 import { useAdminAuth } from "@/components/AdminAuthProvider";
+import { useAdminDict } from "@/components/AdminLocaleProvider";
+import { useAdminLocale } from "@/components/AdminLocaleProvider";
 
 const locales = [
   { code: "en", label: "English" },
@@ -12,6 +14,9 @@ const locales = [
 
 export default function ProgramEditorPage() {
   const { supabase, session, loading: authLoading, logout } = useAdminAuth();
+  const dict = useAdminDict();
+  const { language } = useAdminLocale();
+  const t = (ru, en) => (language === "en" ? en : ru);
   const [loading, setLoading] = useState(true);
   const [locale, setLocale] = useState("en");
   const [titleLines, setTitleLines] = useState([]);
@@ -131,7 +136,7 @@ export default function ProgramEditorPage() {
 
     const sectionId = upserted?.[0]?.id;
     if (!sectionId) {
-      setError("Не удалось получить id секции");
+      setError(dict.common.errorSectionId);
       setSaving(false);
       return;
     }
@@ -152,7 +157,7 @@ export default function ProgramEditorPage() {
     if (insertError) {
       setError(insertError.message);
     } else {
-      setMessage("Сохранено");
+      setMessage(dict.common.saved);
     }
     setSaving(false);
   };
@@ -160,7 +165,7 @@ export default function ProgramEditorPage() {
   if (authLoading || !session || !supabase) {
     return (
       <main className={styles.page}>
-        <div className={styles.panel}>Загрузка...</div>
+        <div className={styles.panel}>{dict.common.loading}</div>
       </main>
     );
   }
@@ -173,7 +178,7 @@ export default function ProgramEditorPage() {
             <div className={styles.kicker}>Editor</div>
             <div className={styles.heading}>PROGRAM</div>
             <div className={styles.breadcrumbs}>
-              <Link href="/admin/editor">← Ко всем блокам</Link>
+              <Link href="/admin/editor">{dict.common.backBlocks}</Link>
             </div>
           </div>
           <div className={styles.actions}>
@@ -188,26 +193,30 @@ export default function ProgramEditorPage() {
                 </option>
               ))}
             </select>
-            <button onClick={saveSection} className={styles.primaryBtn} disabled={saving}>
-              {saving ? "Сохраняю..." : "Сохранить"}
+            <button
+              onClick={saveSection}
+              className={styles.primaryBtn}
+              disabled={saving}
+            >
+              {saving ? dict.common.saving : dict.common.save}
             </button>
             <button onClick={logout} className={styles.secondaryBtn}>
-              Выйти
+              {dict.common.logout}
             </button>
           </div>
         </header>
 
         {loading ? (
-          <div className={styles.panel}>Загрузка...</div>
+          <div className={styles.panel}>{dict.common.loading}</div>
         ) : (
           <>
             <section className={styles.panel}>
-              <div className={styles.kicker}>Заголовок</div>
+              <div className={styles.kicker}>{dict.editor.heading}</div>
               <div className={styles.itemsGrid}>
                 {titleLines.map((line, idx) => (
                   <div key={idx} className={styles.itemCard}>
                     <label className={styles.label}>
-                      Текст
+                      {dict.editor.text}
                       <input
                         value={line.text ?? ""}
                         onChange={(e) =>
@@ -232,22 +241,24 @@ export default function ProgramEditorPage() {
             </section>
 
             <section className={styles.panel}>
-              <div className={styles.kicker}>Параграфы</div>
+              <div className={styles.kicker}>{dict.editor.paragraphs}</div>
               <div className={styles.itemsGrid}>
                 {paragraphs.map((p, idx) => (
                   <div key={idx} className={styles.itemCard}>
                     <label className={styles.label}>
-                      Линии (по одной на строку)
+                      {dict.editor.linesOnePerRow}
                       <textarea
                         value={(p.lines ?? []).join("\n")}
-                        onChange={(e) => updateParagraphLines(idx, e.target.value)}
+                        onChange={(e) =>
+                          updateParagraphLines(idx, e.target.value)
+                        }
                         className={styles.input}
                         rows={4}
                       />
                     </label>
                     {idx > 0 && (
                       <label className={styles.label}>
-                        Highlight (опционально)
+                        {dict.editor.highlightOptional}
                         <input
                           value={p.highlight ?? ""}
                           onChange={(e) =>
@@ -263,33 +274,45 @@ export default function ProgramEditorPage() {
             </section>
 
             <section className={styles.panel}>
-              <div className={styles.kicker}>Кнопки и предпросмотр</div>
+              <div className={styles.kicker}>{dict.editor.buttonsPreview}</div>
               <div className={styles.row}>
                 <label className={styles.label}>
-                  Expand label
+                  {dict.editor.expandLabel}
                   <input
                     value={buttons.expand ?? ""}
-                    onChange={(e) => setButtons((prev) => ({ ...prev, expand: e.target.value }))}
+                    onChange={(e) =>
+                      setButtons((prev) => ({
+                        ...prev,
+                        expand: e.target.value,
+                      }))
+                    }
                     className={styles.input}
                     placeholder="The whole program"
                   />
                 </label>
                 <label className={styles.label}>
-                  Collapse label
+                  {dict.editor.collapseLabel}
                   <input
                     value={buttons.collapse ?? ""}
-                    onChange={(e) => setButtons((prev) => ({ ...prev, collapse: e.target.value }))}
+                    onChange={(e) =>
+                      setButtons((prev) => ({
+                        ...prev,
+                        collapse: e.target.value,
+                      }))
+                    }
                     className={styles.input}
                     placeholder="Hide program"
                   />
                 </label>
                 <label className={styles.label}>
-                  Preview count
+                  {dict.editor.previewCount}
                   <input
                     type="number"
                     min={1}
                     value={previewCount}
-                    onChange={(e) => setPreviewCount(Number(e.target.value) || 1)}
+                    onChange={(e) =>
+                      setPreviewCount(Number(e.target.value) || 1)
+                    }
                     className={styles.input}
                   />
                 </label>
@@ -297,26 +320,32 @@ export default function ProgramEditorPage() {
             </section>
 
             <section className={styles.panel}>
-              <div className={styles.kicker}>Модули</div>
+              <div className={styles.kicker}>{dict.editor.modules}</div>
               <div className={styles.itemsGrid}>
                 {modules.map((m, idx) => (
                   <div key={idx} className={styles.itemCard}>
                     <div className={styles.itemHeader}>
-                      <div className={styles.itemIndex}>/{String(idx + 1).padStart(2, "0")}</div>
+                      <div className={styles.itemIndex}>
+                        /{String(idx + 1).padStart(2, "0")}
+                      </div>
                     </div>
                     <label className={styles.label}>
-                      Заголовок
+                      {dict.editor.title}
                       <input
                         value={m.title ?? ""}
-                        onChange={(e) => updateModule(idx, { title: e.target.value })}
+                        onChange={(e) =>
+                          updateModule(idx, { title: e.target.value })
+                        }
                         className={styles.input}
                       />
                     </label>
                     <label className={styles.label}>
-                      Описание
+                      {dict.editor.description}
                       <textarea
                         value={m.answer ?? ""}
-                        onChange={(e) => updateModule(idx, { answer: e.target.value })}
+                        onChange={(e) =>
+                          updateModule(idx, { answer: e.target.value })
+                        }
                         className={styles.input}
                         rows={3}
                       />

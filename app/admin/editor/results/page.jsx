@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import styles from "@/styles/Admin.module.css";
 import { useAdminAuth } from "@/components/AdminAuthProvider";
+import { useAdminDict } from "@/components/AdminLocaleProvider";
 
 const locales = [
   { code: "en", label: "English" },
@@ -12,6 +13,7 @@ const locales = [
 
 export default function ResultsEditorPage() {
   const { supabase, session, loading: authLoading, logout } = useAdminAuth();
+  const dict = useAdminDict();
   const [loading, setLoading] = useState(true);
   const [locale, setLocale] = useState("en");
   const [titleTop, setTitleTop] = useState("");
@@ -58,9 +60,7 @@ export default function ResultsEditorPage() {
   }, [authLoading, locale, session, supabase]);
 
   const updateBullet = (index, value) => {
-    setBullets((prev) =>
-      prev.map((b, i) => (i === index ? value : b))
-    );
+    setBullets((prev) => prev.map((b, i) => (i === index ? value : b)));
   };
 
   const addBullet = () => {
@@ -94,7 +94,7 @@ export default function ResultsEditorPage() {
     if (upsertError) {
       setError(upsertError.message);
     } else {
-      setMessage("Сохранено");
+      setMessage(dict.common.saved);
     }
     setSaving(false);
   };
@@ -102,7 +102,7 @@ export default function ResultsEditorPage() {
   if (authLoading || !session || !supabase) {
     return (
       <main className={styles.page}>
-        <div className={styles.panel}>Загрузка...</div>
+        <div className={styles.panel}>{dict.common.loading}</div>
       </main>
     );
   }
@@ -115,7 +115,7 @@ export default function ResultsEditorPage() {
             <div className={styles.kicker}>Editor</div>
             <div className={styles.heading}>RESULTS</div>
             <div className={styles.breadcrumbs}>
-              <Link href="/admin/editor">← Ко всем блокам</Link>
+              <Link href="/admin/editor">{dict.common.backBlocks}</Link>
             </div>
           </div>
           <div className={styles.actions}>
@@ -130,24 +130,28 @@ export default function ResultsEditorPage() {
                 </option>
               ))}
             </select>
-            <button onClick={saveSection} className={styles.primaryBtn} disabled={saving}>
-              {saving ? "Сохраняю..." : "Сохранить"}
+            <button
+              onClick={saveSection}
+              className={styles.primaryBtn}
+              disabled={saving}
+            >
+              {saving ? dict.common.saving : dict.common.save}
             </button>
             <button onClick={logout} className={styles.secondaryBtn}>
-              Выйти
+              {dict.common.logout}
             </button>
           </div>
         </header>
 
         {loading ? (
-          <div className={styles.panel}>Загрузка...</div>
+          <div className={styles.panel}>{dict.common.loading}</div>
         ) : (
           <>
             <section className={styles.panel}>
-              <div className={styles.kicker}>Заголовок</div>
+              <div className={styles.kicker}>{dict.editor.heading}</div>
               <div className={styles.row}>
                 <label className={styles.label}>
-                  Top
+                  {dict.editor.top}
                   <input
                     value={titleTop ?? ""}
                     onChange={(e) => setTitleTop(e.target.value)}
@@ -155,7 +159,7 @@ export default function ResultsEditorPage() {
                   />
                 </label>
                 <label className={styles.label}>
-                  Highlight
+                  {dict.editor.highlight}
                   <input
                     value={titleHighlight ?? ""}
                     onChange={(e) => setTitleHighlight(e.target.value)}
@@ -166,7 +170,7 @@ export default function ResultsEditorPage() {
             </section>
 
             <section className={styles.panel}>
-              <div className={styles.kicker}>Список</div>
+              <div className={styles.kicker}>{dict.editor.list}</div>
               <div className={styles.itemsGrid}>
                 {bullets.map((b, idx) => (
                   <div key={idx} className={styles.itemCard}>
@@ -182,21 +186,25 @@ export default function ResultsEditorPage() {
                         className={styles.linkBtn}
                         onClick={() => removeBullet(idx)}
                       >
-                        Удалить
+                        {dict.common.delete}
                       </button>
                     </div>
                   </div>
                 ))}
               </div>
-              <button type="button" onClick={addBullet} className={styles.secondaryBtn}>
-                Добавить пункт
+              <button
+                type="button"
+                onClick={addBullet}
+                className={styles.secondaryBtn}
+              >
+                {dict.common.addItem}
               </button>
             </section>
 
             <section className={styles.panel}>
-              <div className={styles.kicker}>CTA</div>
+              <div className={styles.kicker}>{dict.editor.cta}</div>
               <label className={styles.label}>
-                CTA текст
+                {dict.editor.ctaText}
                 <input
                   value={cta ?? ""}
                   onChange={(e) => setCta(e.target.value)}

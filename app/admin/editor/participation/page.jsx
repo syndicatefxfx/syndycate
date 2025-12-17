@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import styles from "@/styles/Admin.module.css";
 import { useAdminAuth } from "@/components/AdminAuthProvider";
+import { useAdminDict } from "@/components/AdminLocaleProvider";
 
 const locales = [
   { code: "en", label: "English" },
@@ -12,6 +13,7 @@ const locales = [
 
 export default function ParticipationEditorPage() {
   const { supabase, session, loading: authLoading, logout } = useAdminAuth();
+  const dict = useAdminDict();
   const [loading, setLoading] = useState(true);
   const [locale, setLocale] = useState("en");
   const [section, setSection] = useState({
@@ -45,7 +47,10 @@ export default function ParticipationEditorPage() {
       )
       .eq("locale", locale)
       .eq("status", "published")
-      .order("ordering", { foreignTable: "participation_tariffs", ascending: true })
+      .order("ordering", {
+        foreignTable: "participation_tariffs",
+        ascending: true,
+      })
       .limit(1)
       .then(({ data, error: fetchError }) => {
         if (fetchError) {
@@ -163,7 +168,7 @@ export default function ParticipationEditorPage() {
 
     const sectionId = upserted?.[0]?.id;
     if (!sectionId) {
-      setError("Не удалось получить id секции");
+      setError(dict.common.errorSectionId);
       setSaving(false);
       return;
     }
@@ -192,7 +197,7 @@ export default function ParticipationEditorPage() {
     if (insertError) {
       setError(insertError.message);
     } else {
-      setMessage("Сохранено");
+      setMessage(dict.common.saved);
     }
     setSaving(false);
   };
@@ -200,7 +205,7 @@ export default function ParticipationEditorPage() {
   if (authLoading || !session || !supabase) {
     return (
       <main className={styles.page}>
-        <div className={styles.panel}>Загрузка...</div>
+        <div className={styles.panel}>{dict.common.loading}</div>
       </main>
     );
   }
@@ -213,7 +218,7 @@ export default function ParticipationEditorPage() {
             <div className={styles.kicker}>Editor</div>
             <div className={styles.heading}>PARTICIPATION</div>
             <div className={styles.breadcrumbs}>
-              <Link href="/admin/editor">← Ко всем блокам</Link>
+              <Link href="/admin/editor">{dict.common.backBlocks}</Link>
             </div>
           </div>
           <div className={styles.actions}>
@@ -228,24 +233,28 @@ export default function ParticipationEditorPage() {
                 </option>
               ))}
             </select>
-            <button onClick={saveSection} className={styles.primaryBtn} disabled={saving}>
-              {saving ? "Сохраняю..." : "Сохранить"}
+            <button
+              onClick={saveSection}
+              className={styles.primaryBtn}
+              disabled={saving}
+            >
+              {saving ? dict.common.saving : dict.common.save}
             </button>
             <button onClick={logout} className={styles.secondaryBtn}>
-              Выйти
+              {dict.common.logout}
             </button>
           </div>
         </header>
 
         {loading ? (
-          <div className={styles.panel}>Загрузка...</div>
+          <div className={styles.panel}>{dict.common.loading}</div>
         ) : (
           <>
             <section className={styles.panel}>
-              <div className={styles.kicker}>Секция</div>
+              <div className={styles.kicker}>{dict.editor.section}</div>
               <div className={styles.row}>
                 <label className={styles.label}>
-                  Tag
+                  {dict.editor.tag}
                   <input
                     value={section.tag ?? ""}
                     onChange={(e) => updateSection({ tag: e.target.value })}
@@ -254,29 +263,35 @@ export default function ParticipationEditorPage() {
                   />
                 </label>
                 <label className={styles.label}>
-                  Title 1
+                  {dict.editor.title1}
                   <input
                     value={section.title_first ?? ""}
-                    onChange={(e) => updateSection({ title_first: e.target.value })}
+                    onChange={(e) =>
+                      updateSection({ title_first: e.target.value })
+                    }
                     className={styles.input}
                     placeholder="PARTICIPATION"
                   />
                 </label>
                 <label className={styles.label}>
-                  Title 2
+                  {dict.editor.title2}
                   <input
                     value={section.title_second ?? ""}
-                    onChange={(e) => updateSection({ title_second: e.target.value })}
+                    onChange={(e) =>
+                      updateSection({ title_second: e.target.value })
+                    }
                     className={styles.input}
                     placeholder="FORMATS"
                   />
                 </label>
               </div>
               <label className={styles.label}>
-                Modal close label
+                {dict.editor.modalCloseLabel}
                 <input
                   value={section.modal_close ?? ""}
-                  onChange={(e) => updateSection({ modal_close: e.target.value })}
+                  onChange={(e) =>
+                    updateSection({ modal_close: e.target.value })
+                  }
                   className={styles.input}
                   placeholder="Close"
                 />
@@ -284,50 +299,60 @@ export default function ParticipationEditorPage() {
             </section>
 
             <section className={styles.panel}>
-              <div className={styles.kicker}>Тарифы</div>
+              <div className={styles.kicker}>{dict.editor.tariffs}</div>
               <div className={styles.itemsGrid}>
                 {tariffs.map((t, idx) => (
                   <div key={idx} className={styles.itemCard}>
                     <div className={styles.itemHeader}>
-                      <div className={styles.itemIndex}>/{String(idx + 1).padStart(2, "0")}</div>
+                      <div className={styles.itemIndex}>
+                        /{String(idx + 1).padStart(2, "0")}
+                      </div>
                       <button
                         type="button"
                         className={styles.linkBtn}
                         onClick={() => removeTariff(idx)}
                       >
-                        Удалить
+                        {dict.common.delete}
                       </button>
                     </div>
                     <label className={styles.label}>
-                      Название
+                      {dict.editor.name}
                       <input
                         value={t.title ?? ""}
-                        onChange={(e) => updateTariff(idx, { title: e.target.value })}
+                        onChange={(e) =>
+                          updateTariff(idx, { title: e.target.value })
+                        }
                         className={styles.input}
                       />
                     </label>
                     <label className={styles.label}>
-                      Подзаголовок/режим
+                      {dict.editor.subtitleMode}
                       <input
                         value={t.mode ?? ""}
-                        onChange={(e) => updateTariff(idx, { mode: e.target.value })}
+                        onChange={(e) =>
+                          updateTariff(idx, { mode: e.target.value })
+                        }
                         className={styles.input}
                       />
                     </label>
                     <label className={styles.label}>
-                      Цена
+                      {dict.editor.price}
                       <input
                         value={t.price ?? ""}
-                        onChange={(e) => updateTariff(idx, { price: e.target.value })}
+                        onChange={(e) =>
+                          updateTariff(idx, { price: e.target.value })
+                        }
                         className={styles.input}
                         placeholder="$149"
                       />
                     </label>
                     <label className={styles.label}>
-                      Старая цена (опционально)
+                      {dict.editor.oldPrice}
                       <input
                         value={t.old_price ?? ""}
-                        onChange={(e) => updateTariff(idx, { old_price: e.target.value })}
+                        onChange={(e) =>
+                          updateTariff(idx, { old_price: e.target.value })
+                        }
                         className={styles.input}
                         placeholder="$199"
                       />
@@ -336,7 +361,9 @@ export default function ParticipationEditorPage() {
                       CTA
                       <input
                         value={t.cta ?? ""}
-                        onChange={(e) => updateTariff(idx, { cta: e.target.value })}
+                        onChange={(e) =>
+                          updateTariff(idx, { cta: e.target.value })
+                        }
                         className={styles.input}
                         placeholder="Reserve your spot"
                       />
@@ -344,13 +371,13 @@ export default function ParticipationEditorPage() {
 
                     <div className={styles.bullets}>
                       <div className={styles.bulletsHeader}>
-                        <span>Bullets</span>
+                        <span>{dict.editor.bullets}</span>
                         <button
                           type="button"
                           className={styles.linkBtn}
                           onClick={() => addBullet(idx, "bullets")}
                         >
-                          Добавить пункт
+                          {dict.common.addBullet}
                         </button>
                       </div>
                       {(t.bullets ?? []).map((b, bulletIdx) => (
@@ -358,16 +385,40 @@ export default function ParticipationEditorPage() {
                           <input
                             value={b?.text ?? b ?? ""}
                             onChange={(e) =>
-                              updateBullet(idx, bulletIdx, { text: e.target.value, muted: b?.muted ?? false }, "bullets")
+                              updateBullet(
+                                idx,
+                                bulletIdx,
+                                {
+                                  text: e.target.value,
+                                  muted: b?.muted ?? false,
+                                },
+                                "bullets"
+                              )
                             }
                             className={styles.input}
                           />
-                          <label className={styles.label} style={{ flexDirection: "row", alignItems: "center", gap: "6px", margin: 0 }}>
+                          <label
+                            className={styles.label}
+                            style={{
+                              flexDirection: "row",
+                              alignItems: "center",
+                              gap: "6px",
+                              margin: 0,
+                            }}
+                          >
                             <input
                               type="checkbox"
                               checked={b?.muted ?? false}
                               onChange={(e) =>
-                                updateBullet(idx, bulletIdx, { text: b?.text ?? b ?? "", muted: e.target.checked }, "bullets")
+                                updateBullet(
+                                  idx,
+                                  bulletIdx,
+                                  {
+                                    text: b?.text ?? b ?? "",
+                                    muted: e.target.checked,
+                                  },
+                                  "bullets"
+                                )
                               }
                             />
                             Muted
@@ -375,14 +426,18 @@ export default function ParticipationEditorPage() {
                           <button
                             type="button"
                             className={styles.linkBtn}
-                            onClick={() => removeBullet(idx, bulletIdx, "bullets")}
+                            onClick={() =>
+                              removeBullet(idx, bulletIdx, "bullets")
+                            }
                           >
                             ✕
                           </button>
                         </div>
                       ))}
                       {(t.bullets ?? []).length === 0 && (
-                        <div className={styles.muted}>Нет пунктов</div>
+                        <div className={styles.muted}>
+                          {dict.common.noItems}
+                        </div>
                       )}
                     </div>
 
@@ -394,7 +449,7 @@ export default function ParticipationEditorPage() {
                           className={styles.linkBtn}
                           onClick={() => addBullet(idx, "extra")}
                         >
-                          Добавить строку
+                          {dict.common.addRow}
                         </button>
                       </div>
                       {(t.extra ?? []).map((b, bulletIdx) => (
@@ -402,16 +457,40 @@ export default function ParticipationEditorPage() {
                           <input
                             value={b?.text ?? b ?? ""}
                             onChange={(e) =>
-                              updateBullet(idx, bulletIdx, { text: e.target.value, muted: b?.muted ?? false }, "extra")
+                              updateBullet(
+                                idx,
+                                bulletIdx,
+                                {
+                                  text: e.target.value,
+                                  muted: b?.muted ?? false,
+                                },
+                                "extra"
+                              )
                             }
                             className={styles.input}
                           />
-                          <label className={styles.label} style={{ flexDirection: "row", alignItems: "center", gap: "6px", margin: 0 }}>
+                          <label
+                            className={styles.label}
+                            style={{
+                              flexDirection: "row",
+                              alignItems: "center",
+                              gap: "6px",
+                              margin: 0,
+                            }}
+                          >
                             <input
                               type="checkbox"
                               checked={b?.muted ?? false}
                               onChange={(e) =>
-                                updateBullet(idx, bulletIdx, { text: b?.text ?? b ?? "", muted: e.target.checked }, "extra")
+                                updateBullet(
+                                  idx,
+                                  bulletIdx,
+                                  {
+                                    text: b?.text ?? b ?? "",
+                                    muted: e.target.checked,
+                                  },
+                                  "extra"
+                                )
                               }
                             />
                             Muted
@@ -419,21 +498,27 @@ export default function ParticipationEditorPage() {
                           <button
                             type="button"
                             className={styles.linkBtn}
-                            onClick={() => removeBullet(idx, bulletIdx, "extra")}
+                            onClick={() =>
+                              removeBullet(idx, bulletIdx, "extra")
+                            }
                           >
                             ✕
                           </button>
                         </div>
                       ))}
                       {(t.extra ?? []).length === 0 && (
-                        <div className={styles.muted}>Нет доп. строк</div>
+                        <div className={styles.muted}>{dict.common.noRows}</div>
                       )}
                     </div>
                   </div>
                 ))}
               </div>
-              <button type="button" onClick={addTariff} className={styles.secondaryBtn}>
-                Добавить тариф
+              <button
+                type="button"
+                onClick={addTariff}
+                className={styles.secondaryBtn}
+              >
+                {dict.common.addTariff}
               </button>
             </section>
           </>

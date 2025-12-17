@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import styles from "@/styles/Admin.module.css";
 import { useAdminAuth } from "@/components/AdminAuthProvider";
+import { useAdminDict } from "@/components/AdminLocaleProvider";
 import Link from "next/link";
 
 const locales = [
@@ -12,6 +13,7 @@ const locales = [
 
 export default function WhoIsForEditorPage() {
   const { supabase, session, loading: authLoading, logout } = useAdminAuth();
+  const dict = useAdminDict();
   const [loading, setLoading] = useState(true);
   const [locale, setLocale] = useState("en");
   const [tag, setTag] = useState("");
@@ -143,12 +145,15 @@ export default function WhoIsForEditorPage() {
 
     const sectionId = upserted?.[0]?.id;
     if (!sectionId) {
-      setError("Не удалось получить id секции");
+      setError(dict.common.errorSectionId);
       setSaving(false);
       return;
     }
 
-    await supabase.from("who_is_for_items").delete().eq("section_id", sectionId);
+    await supabase
+      .from("who_is_for_items")
+      .delete()
+      .eq("section_id", sectionId);
 
     const payload = items.map((item, index) => ({
       section_id: sectionId,
@@ -165,7 +170,7 @@ export default function WhoIsForEditorPage() {
     if (insertError) {
       setError(insertError.message);
     } else {
-      setMessage("Сохранено");
+      setMessage(dict.common.saved);
     }
     setSaving(false);
   };
@@ -173,7 +178,7 @@ export default function WhoIsForEditorPage() {
   if (authLoading || !session || !supabase) {
     return (
       <main className={styles.page}>
-        <div className={styles.card}>Загрузка...</div>
+        <div className={styles.card}>{dict.common.loading}</div>
       </main>
     );
   }
@@ -186,7 +191,7 @@ export default function WhoIsForEditorPage() {
             <div className={styles.kicker}>Editor</div>
             <div className={styles.heading}>WHO IS THIS FOR?</div>
             <div className={styles.breadcrumbs}>
-              <Link href="/admin">← Ко всем разделам</Link>
+              <Link href="/admin/editor">{dict.common.backBlocks}</Link>
             </div>
           </div>
           <div className={styles.actions}>
@@ -201,23 +206,27 @@ export default function WhoIsForEditorPage() {
                 </option>
               ))}
             </select>
-            <button onClick={saveSection} className={styles.primaryBtn} disabled={saving}>
-              {saving ? "Сохраняю..." : "Сохранить"}
+            <button
+              onClick={saveSection}
+              className={styles.primaryBtn}
+              disabled={saving}
+            >
+              {saving ? dict.common.saving : dict.common.save}
             </button>
             <button onClick={logout} className={styles.secondaryBtn}>
-              Выйти
+              {dict.common.logout}
             </button>
           </div>
         </header>
 
         {loading ? (
-          <div className={styles.panel}>Загрузка...</div>
+          <div className={styles.panel}>{dict.common.loading}</div>
         ) : (
           <>
             <section className={styles.panel}>
-              <div className={styles.kicker}>Секция</div>
+              <div className={styles.kicker}>{dict.editor.section}</div>
               <label className={styles.label}>
-                Tag
+                {dict.editor.tag}
                 <input
                   value={tag}
                   onChange={(e) => setTag(e.target.value)}
@@ -227,7 +236,7 @@ export default function WhoIsForEditorPage() {
               </label>
               <div className={styles.row}>
                 <label className={styles.label}>
-                  Title prefix
+                  {dict.editor.titlePrefix}
                   <input
                     value={titlePrefix}
                     onChange={(e) => setTitlePrefix(e.target.value)}
@@ -236,7 +245,7 @@ export default function WhoIsForEditorPage() {
                   />
                 </label>
                 <label className={styles.label}>
-                  Title suffix
+                  {dict.editor.titleSuffix}
                   <input
                     value={titleSuffix}
                     onChange={(e) => setTitleSuffix(e.target.value)}
@@ -248,22 +257,24 @@ export default function WhoIsForEditorPage() {
             </section>
 
             <section className={styles.panel}>
-              <div className={styles.kicker}>Элементы</div>
+              <div className={styles.kicker}>{dict.editor.elements}</div>
               <div className={styles.itemsGrid}>
                 {items.map((item, index) => (
                   <div key={index} className={styles.itemCard}>
                     <div className={styles.itemHeader}>
-                      <div className={styles.itemIndex}>/{String(index + 1).padStart(2, "0")}</div>
+                      <div className={styles.itemIndex}>
+                        /{String(index + 1).padStart(2, "0")}
+                      </div>
                       <button
                         type="button"
                         className={styles.linkBtn}
                         onClick={() => removeItem(index)}
                       >
-                        Удалить
+                        {dict.common.delete}
                       </button>
                     </div>
                     <label className={styles.label}>
-                      Number
+                      {dict.editor.number}
                       <input
                         value={item.number_label ?? ""}
                         onChange={(e) =>
@@ -274,23 +285,25 @@ export default function WhoIsForEditorPage() {
                       />
                     </label>
                     <label className={styles.label}>
-                      Title
+                      {dict.editor.title}
                       <input
                         value={item.title ?? ""}
-                        onChange={(e) => updateItem(index, { title: e.target.value })}
+                        onChange={(e) =>
+                          updateItem(index, { title: e.target.value })
+                        }
                         className={styles.input}
                         placeholder="STARTING FROM SCRATCH"
                       />
                     </label>
                     <div className={styles.bullets}>
                       <div className={styles.bulletsHeader}>
-                        <span>Bullets</span>
+                        <span>{dict.editor.bullets}</span>
                         <button
                           type="button"
                           className={styles.linkBtn}
                           onClick={() => addBullet(index)}
                         >
-                          Добавить пункт
+                          {dict.common.addBullet}
                         </button>
                       </div>
                       {(item.bullets ?? []).map((bullet, bulletIndex) => (
@@ -312,14 +325,20 @@ export default function WhoIsForEditorPage() {
                         </div>
                       ))}
                       {(item.bullets ?? []).length === 0 && (
-                        <div className={styles.muted}>Нет пунктов</div>
+                        <div className={styles.muted}>
+                          {dict.common.noItems}
+                        </div>
                       )}
                     </div>
                   </div>
                 ))}
               </div>
-              <button type="button" onClick={addItem} className={styles.secondaryBtn}>
-                Добавить элемент
+              <button
+                type="button"
+                onClick={addItem}
+                className={styles.secondaryBtn}
+              >
+                {dict.common.addElement}
               </button>
             </section>
           </>
