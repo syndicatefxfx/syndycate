@@ -156,7 +156,29 @@ export default function SeoPage() {
         </header>
 
         {loading ? (
-          <div className={styles.panel}>{dict.common.loading}</div>
+          <section className={styles.panel}>
+            <div className={styles.skeletonKicker}></div>
+            <div className={styles.skeletonLabel}>
+              <div className={styles.skeletonText}></div>
+              <div className={styles.skeletonInput}></div>
+            </div>
+            <div className={styles.skeletonLabel}>
+              <div className={styles.skeletonText}></div>
+              <div className={styles.skeletonTextarea}></div>
+            </div>
+            <div className={styles.skeletonLabel}>
+              <div className={styles.skeletonText}></div>
+              <div className={styles.skeletonInput}></div>
+            </div>
+            <div className={styles.skeletonLabel}>
+              <div className={styles.skeletonText}></div>
+              <div className={styles.skeletonInput}></div>
+            </div>
+            <div className={styles.skeletonLabel}>
+              <div className={styles.skeletonText}></div>
+              <div className={styles.skeletonInput}></div>
+            </div>
+          </section>
         ) : (
           <section className={styles.panel}>
             <div className={styles.kicker}>{dict.seo.home}</div>

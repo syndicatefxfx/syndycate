@@ -6,10 +6,6 @@ import { useAdminDict } from "@/components/AdminLocaleProvider";
 
 const blocks = [
   {
-    slug: "/admin/editor/who-is-for",
-    title: "WHO IS THIS FOR?",
-  },
-  {
     slug: "/admin/editor/hero",
     title: "HERO",
   },
@@ -20,6 +16,10 @@ const blocks = [
   {
     slug: "/admin/editor/program",
     title: "PROGRAM",
+  },
+  {
+    slug: "/admin/editor/who-is-for",
+    title: "WHO IS THIS FOR?",
   },
   {
     slug: "/admin/editor/results",

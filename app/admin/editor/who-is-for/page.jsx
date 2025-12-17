@@ -220,7 +220,45 @@ export default function WhoIsForEditorPage() {
         </header>
 
         {loading ? (
-          <div className={styles.panel}>{dict.common.loading}</div>
+          <section className={styles.panel}>
+            <div className={styles.skeletonKicker}></div>
+            <div className={styles.skeletonLabel}>
+              <div className={styles.skeletonText}></div>
+              <div className={styles.skeletonInput}></div>
+            </div>
+            <div className={styles.row}>
+              <div className={styles.skeletonLabel}>
+                <div className={styles.skeletonText}></div>
+                <div className={styles.skeletonInput}></div>
+              </div>
+              <div className={styles.skeletonLabel}>
+                <div className={styles.skeletonText}></div>
+                <div className={styles.skeletonInput}></div>
+              </div>
+            </div>
+            <div className={styles.itemsGrid}>
+              {[...Array(3)].map((_, idx) => (
+                <div key={idx} className={styles.itemCard}>
+                  <div
+                    className={styles.skeletonText}
+                    style={{
+                      width: "40px",
+                      height: "14px",
+                      marginBottom: "12px",
+                    }}
+                  ></div>
+                  <div className={styles.skeletonLabel}>
+                    <div className={styles.skeletonText}></div>
+                    <div className={styles.skeletonInput}></div>
+                  </div>
+                  <div className={styles.skeletonLabel}>
+                    <div className={styles.skeletonText}></div>
+                    <div className={styles.skeletonInput}></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
         ) : (
           <>
             <section className={styles.panel}>

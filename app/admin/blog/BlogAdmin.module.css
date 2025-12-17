@@ -3,6 +3,7 @@
   grid-template-columns: 320px 1fr;
   gap: 20px;
   margin-top: 20px;
+  align-items: stretch;
 }
 
 .sidebar {
@@ -10,11 +11,10 @@
   border: 1px solid #2c2c2c;
   border-radius: 14px;
   padding: 20px;
-  height: fit-content;
-  max-height: calc(100vh - 200px);
-  overflow-y: auto;
-  position: sticky;
-  top: 20px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 600px;
 }
 
 .sidebarHeader {
@@ -50,6 +50,9 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
 }
 
 .articleItem {
@@ -127,6 +130,8 @@
   border-bottom: 1px solid #2c2c2c;
   padding: 0 20px;
   overflow-x: auto;
+  overflow-y: hidden;
+  flex-shrink: 0;
 }
 
 .tab {
@@ -160,6 +165,21 @@
   padding: 24px;
   overflow-y: auto;
   max-height: calc(100vh - 300px);
+  display: flex;
+  flex-direction: column;
+}
+
+.tabContentWithEditor {
+  overflow: hidden !important;
+  padding: 0 !important;
+  height: calc(100vh - 300px) !important;
+}
+
+.tabContentWithEditor > div {
+  padding: 24px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .formSection {
@@ -249,10 +269,10 @@
 }
 
 .previewContent h2 {
-  font-size: 28px;
-  font-weight: 700;
+  font-size: 24px;
+  font-weight: 600;
   margin: 32px 0 16px 0;
-  color: var(--color-primary);
+  color: var(--color-secondary);
 }
 
 .previewContent h2:first-child {

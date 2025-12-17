@@ -3,6 +3,9 @@
   border-radius: 8px;
   background: var(--color-dark-secondary);
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .toolbar {
@@ -12,6 +15,10 @@
   border-bottom: 1px solid #2c2c2c;
   background: rgba(0, 0, 0, 0.2);
   flex-wrap: wrap;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 .button {
@@ -46,8 +53,9 @@
 .content {
   padding: 16px;
   min-height: 200px;
-  max-height: 600px;
+  flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .editor {

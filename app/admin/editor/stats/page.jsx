@@ -186,7 +186,23 @@ export default function StatsEditorPage() {
         </header>
 
         {loading ? (
-          <div className={styles.panel}>{dict.common.loading}</div>
+          <section className={styles.panel}>
+            <div className={styles.skeletonKicker}></div>
+            <div className={styles.itemsGrid}>
+              {[...Array(4)].map((_, idx) => (
+                <div key={idx} className={styles.itemCard}>
+                  <div className={styles.skeletonLabel}>
+                    <div className={styles.skeletonText}></div>
+                    <div className={styles.skeletonInput}></div>
+                  </div>
+                  <div className={styles.skeletonLabel}>
+                    <div className={styles.skeletonText}></div>
+                    <div className={styles.skeletonInput}></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
         ) : (
           <>
             <section className={styles.panel}>

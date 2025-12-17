@@ -207,7 +207,69 @@ export default function ProgramEditorPage() {
         </header>
 
         {loading ? (
-          <div className={styles.panel}>{dict.common.loading}</div>
+          <>
+            <section className={styles.panel}>
+              <div className={styles.skeletonKicker}></div>
+              <div className={styles.itemsGrid}>
+                {[...Array(4)].map((_, idx) => (
+                  <div key={idx} className={styles.itemCard}>
+                    <div className={styles.skeletonLabel}>
+                      <div className={styles.skeletonText}></div>
+                      <div className={styles.skeletonInput}></div>
+                    </div>
+                    <div className={styles.skeletonLabel}>
+                      <div
+                        className={styles.skeletonText}
+                        style={{ width: "60px" }}
+                      ></div>
+                      <div
+                        className={styles.skeletonInput}
+                        style={{ width: "20px", height: "20px" }}
+                      ></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+            <section className={styles.panel}>
+              <div className={styles.skeletonKicker}></div>
+              <div className={styles.itemsGrid}>
+                {[...Array(2)].map((_, idx) => (
+                  <div key={idx} className={styles.itemCard}>
+                    <div className={styles.skeletonLabel}>
+                      <div className={styles.skeletonText}></div>
+                      <div className={styles.skeletonTextarea}></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+            <section className={styles.panel}>
+              <div className={styles.skeletonKicker}></div>
+              <div className={styles.itemsGrid}>
+                {[...Array(4)].map((_, idx) => (
+                  <div key={idx} className={styles.itemCard}>
+                    <div
+                      className={styles.skeletonText}
+                      style={{
+                        width: "40px",
+                        height: "14px",
+                        marginBottom: "12px",
+                      }}
+                    ></div>
+                    <div className={styles.skeletonLabel}>
+                      <div className={styles.skeletonText}></div>
+                      <div className={styles.skeletonInput}></div>
+                    </div>
+                    <div className={styles.skeletonLabel}>
+                      <div className={styles.skeletonText}></div>
+                      <div className={styles.skeletonTextarea}></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </>
         ) : (
           <>
             <section className={styles.panel}>
@@ -225,15 +287,17 @@ export default function ProgramEditorPage() {
                         className={styles.input}
                       />
                     </label>
-                    <label className={styles.label}>
+                    <label
+                      className={`${styles.label} ${styles.checkboxLabel}`}
+                    >
                       <input
                         type="checkbox"
                         checked={line.highlight ?? false}
                         onChange={(e) =>
                           updateTitleLine(idx, { highlight: e.target.checked })
                         }
-                      />{" "}
-                      Highlight
+                      />
+                      <span>Highlight</span>
                     </label>
                   </div>
                 ))}
@@ -244,7 +308,12 @@ export default function ProgramEditorPage() {
               <div className={styles.kicker}>{dict.editor.paragraphs}</div>
               <div className={styles.itemsGrid}>
                 {paragraphs.map((p, idx) => (
-                  <div key={idx} className={styles.itemCard}>
+                  <div
+                    key={idx}
+                    className={`${styles.itemCard} ${
+                      idx === 0 ? styles.firstParagraphCard : ""
+                    }`}
+                  >
                     <label className={styles.label}>
                       {dict.editor.linesOnePerRow}
                       <textarea
@@ -252,8 +321,10 @@ export default function ProgramEditorPage() {
                         onChange={(e) =>
                           updateParagraphLines(idx, e.target.value)
                         }
-                        className={styles.input}
-                        rows={4}
+                        className={`${styles.input} ${
+                          idx === 0 ? styles.fullHeightTextarea : ""
+                        }`}
+                        rows={idx === 0 ? undefined : 4}
                       />
                     </label>
                     {idx > 0 && (
@@ -347,7 +418,7 @@ export default function ProgramEditorPage() {
                           updateModule(idx, { answer: e.target.value })
                         }
                         className={styles.input}
-                        rows={3}
+                        rows={6}
                       />
                     </label>
                   </div>

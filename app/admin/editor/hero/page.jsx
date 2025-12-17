@@ -191,14 +191,42 @@ export default function HeroEditorPage() {
         </header>
 
         {loading ? (
-          <div className={styles.panel}>{dict.common.loading}</div>
+          <section className={styles.panel}>
+            <div className={styles.skeletonKicker}></div>
+            <div className={styles.row}>
+              <div className={styles.skeletonLabel}>
+                <div className={styles.skeletonText}></div>
+                <div className={styles.skeletonInput}></div>
+              </div>
+              <div className={styles.skeletonLabel}>
+                <div className={styles.skeletonText}></div>
+                <div className={styles.skeletonInput}></div>
+              </div>
+              <div className={styles.skeletonLabel}>
+                <div className={styles.skeletonText}></div>
+                <div className={styles.skeletonInput}></div>
+              </div>
+              <div className={styles.skeletonLabel}>
+                <div className={styles.skeletonText}></div>
+                <div className={styles.skeletonInput}></div>
+              </div>
+            </div>
+            <div className={styles.skeletonLabel}>
+              <div className={styles.skeletonText}></div>
+              <div className={styles.skeletonInput}></div>
+            </div>
+            <div className={styles.skeletonLabel}>
+              <div className={styles.skeletonText}></div>
+              <div className={styles.skeletonInput}></div>
+            </div>
+          </section>
         ) : (
           <>
             <section className={styles.panel}>
               <div className={styles.kicker}>{dict.editor.heading}</div>
               <div className={styles.row}>
                 <label className={styles.label}>
-                  {dict.editor.topLine}
+                  <span>{dict.editor.topLine}</span>
                   <input
                     value={form.heading_top ?? ""}
                     onChange={(e) => updateField("heading_top", e.target.value)}
@@ -207,7 +235,7 @@ export default function HeroEditorPage() {
                   />
                 </label>
                 <label className={styles.label}>
-                  Highlight 1
+                  <span>Highlight 1</span>
                   <input
                     value={form.heading_highlight_first ?? ""}
                     onChange={(e) =>
@@ -218,7 +246,7 @@ export default function HeroEditorPage() {
                   />
                 </label>
                 <label className={styles.label}>
-                  Highlight 2
+                  <span>Highlight 2</span>
                   <input
                     value={form.heading_highlight_second ?? ""}
                     onChange={(e) =>
@@ -229,7 +257,7 @@ export default function HeroEditorPage() {
                   />
                 </label>
                 <label className={styles.label}>
-                  {dict.editor.bottomLine}
+                  <span>{dict.editor.bottomLine}</span>
                   <input
                     value={form.heading_bottom ?? ""}
                     onChange={(e) =>
@@ -245,28 +273,26 @@ export default function HeroEditorPage() {
             <section className={styles.panel}>
               <div className={styles.kicker}>{dict.editor.copyCta}</div>
               <label className={styles.label}>
-                {dict.editor.copyAboveButton}
+                <span>{dict.editor.copyAboveButton}</span>
                 <textarea
                   value={form.text_above_button ?? ""}
                   onChange={(e) =>
                     updateField("text_above_button", e.target.value)
                   }
                   className={styles.input}
-                  rows={2}
+                  rows={3}
                   placeholder="CLOSED-COMMUNITY TRAINING FOR THOSE WHO WANT TO MASTER THE MARKET"
                 />
               </label>
-              <div className={styles.row}>
-                <label className={styles.label}>
-                  CTA
-                  <input
-                    value={form.cta ?? ""}
-                    onChange={(e) => updateField("cta", e.target.value)}
-                    className={styles.input}
-                    placeholder="Reserve your spot"
-                  />
-                </label>
-              </div>
+              <label className={styles.label}>
+                <span>CTA</span>
+                <input
+                  value={form.cta ?? ""}
+                  onChange={(e) => updateField("cta", e.target.value)}
+                  className={styles.input}
+                  placeholder="Reserve your spot"
+                />
+              </label>
             </section>
           </>
         )}

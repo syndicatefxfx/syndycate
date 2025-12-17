@@ -247,7 +247,44 @@ export default function ParticipationEditorPage() {
         </header>
 
         {loading ? (
-          <div className={styles.panel}>{dict.common.loading}</div>
+          <>
+            <section className={styles.panel}>
+              <div className={styles.skeletonKicker}></div>
+              <div className={styles.skeletonLabel}>
+                <div className={styles.skeletonText}></div>
+                <div className={styles.skeletonInput}></div>
+              </div>
+              <div className={styles.skeletonLabel}>
+                <div className={styles.skeletonText}></div>
+                <div className={styles.skeletonInput}></div>
+              </div>
+            </section>
+            <section className={styles.panel}>
+              <div className={styles.skeletonKicker}></div>
+              <div className={styles.itemsGrid}>
+                {[...Array(3)].map((_, idx) => (
+                  <div key={idx} className={styles.itemCard}>
+                    <div
+                      className={styles.skeletonText}
+                      style={{
+                        width: "40px",
+                        height: "14px",
+                        marginBottom: "12px",
+                      }}
+                    ></div>
+                    <div className={styles.skeletonLabel}>
+                      <div className={styles.skeletonText}></div>
+                      <div className={styles.skeletonInput}></div>
+                    </div>
+                    <div className={styles.skeletonLabel}>
+                      <div className={styles.skeletonText}></div>
+                      <div className={styles.skeletonInput}></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </>
         ) : (
           <>
             <section className={styles.panel}>
@@ -398,13 +435,7 @@ export default function ParticipationEditorPage() {
                             className={styles.input}
                           />
                           <label
-                            className={styles.label}
-                            style={{
-                              flexDirection: "row",
-                              alignItems: "center",
-                              gap: "6px",
-                              margin: 0,
-                            }}
+                            className={`${styles.label} ${styles.checkboxLabel}`}
                           >
                             <input
                               type="checkbox"
@@ -421,7 +452,7 @@ export default function ParticipationEditorPage() {
                                 )
                               }
                             />
-                            Muted
+                            <span>Muted</span>
                           </label>
                           <button
                             type="button"
@@ -470,13 +501,7 @@ export default function ParticipationEditorPage() {
                             className={styles.input}
                           />
                           <label
-                            className={styles.label}
-                            style={{
-                              flexDirection: "row",
-                              alignItems: "center",
-                              gap: "6px",
-                              margin: 0,
-                            }}
+                            className={`${styles.label} ${styles.checkboxLabel}`}
                           >
                             <input
                               type="checkbox"
@@ -493,7 +518,7 @@ export default function ParticipationEditorPage() {
                                 )
                               }
                             />
-                            Muted
+                            <span>Muted</span>
                           </label>
                           <button
                             type="button"
@@ -513,13 +538,6 @@ export default function ParticipationEditorPage() {
                   </div>
                 ))}
               </div>
-              <button
-                type="button"
-                onClick={addTariff}
-                className={styles.secondaryBtn}
-              >
-                {dict.common.addTariff}
-              </button>
             </section>
           </>
         )}

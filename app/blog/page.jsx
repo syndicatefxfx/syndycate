@@ -6,7 +6,6 @@ import FooterSection from "@/components/FooterSection";
 import styles from "@/styles/Blog.module.css";
 import Link from "next/link";
 import Image from "next/image";
-import { blogPosts as fallbackPosts } from "@/data/blogPosts";
 import { useLanguage } from "@/components/LanguageProvider";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 

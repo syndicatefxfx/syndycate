@@ -3,11 +3,13 @@
 import { useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import { format } from "date-fns";
 import styles from "@/styles/Admin.module.css";
 import blogStyles from "./BlogAdmin.module.css";
 import { useAdminAuth } from "@/components/AdminAuthProvider";
 import { useAdminDict, useAdminLocale } from "@/components/AdminLocaleProvider";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
+import DatePicker from "@/components/admin/DatePicker";
 
 const RichTextEditor = dynamic(
   () => import("@/components/admin/RichTextEditor"),
@@ -208,13 +210,17 @@ export default function BlogPage() {
     setSelectedId(post?.id || null);
     setIsCreatingMode(false);
     const content = contentArrayToHTML(post?.content);
+    const today = format(
+      new Date(),
+      language === "en" ? "yyyy-MM-dd" : "dd.MM.yyyy"
+    );
     setForm({
       ...emptyPost,
       ...post,
       content,
       published_at: post?.published_at
         ? formatDateForInput(post.published_at, language)
-        : "",
+        : today,
     });
     setMessage("");
     setError("");
@@ -223,7 +229,14 @@ export default function BlogPage() {
 
   const resetForm = () => {
     setSelectedId(null);
-    setForm(emptyPost);
+    const today = format(
+      new Date(),
+      language === "en" ? "yyyy-MM-dd" : "dd.MM.yyyy"
+    );
+    setForm({
+      ...emptyPost,
+      published_at: today,
+    });
     setMessage("");
     setError("");
     setActiveTab("main");
@@ -375,8 +388,12 @@ export default function BlogPage() {
       <div className={styles.container}>
         <header className={styles.topBar}>
           <div>
-            <div className={styles.kicker}>{dict.blog.kicker}</div>
-            <div className={styles.heading}>{dict.blog.heading}</div>
+            <div className={styles.kicker} lang="en" translate="no">
+              Interface
+            </div>
+            <div className={styles.heading} lang="en" translate="no">
+              Articles
+            </div>
             <div className={styles.breadcrumbs}>
               <Link href="/admin">{dict.common.backSections}</Link>
             </div>
@@ -427,7 +444,42 @@ export default function BlogPage() {
             </div>
             <div className={blogStyles.articlesList}>
               {loading ? (
-                <div className={styles.muted}>{dict.common.loading}</div>
+                <>
+                  {[...Array(4)].map((_, idx) => (
+                    <div key={idx} className={blogStyles.articleItem}>
+                      <div className={blogStyles.articleHeader}>
+                        <div
+                          className={styles.skeletonText}
+                          style={{ width: "50px", height: "11px" }}
+                        ></div>
+                        <div
+                          className={styles.skeletonText}
+                          style={{ width: "70px", height: "11px" }}
+                        ></div>
+                      </div>
+                      <div
+                        className={styles.skeletonText}
+                        style={{
+                          width: "90%",
+                          height: "16px",
+                          marginBottom: "8px",
+                        }}
+                      ></div>
+                      <div
+                        className={styles.skeletonText}
+                        style={{
+                          width: "80%",
+                          height: "16px",
+                          marginBottom: "4px",
+                        }}
+                      ></div>
+                      <div
+                        className={styles.skeletonText}
+                        style={{ width: "60%", height: "12px" }}
+                      ></div>
+                    </div>
+                  ))}
+                </>
               ) : posts.length === 0 ? (
                 <div className={styles.muted}>{dict.common.noItems}</div>
               ) : (
@@ -496,7 +548,13 @@ export default function BlogPage() {
                   </button>
                 </div>
 
-                <div className={blogStyles.tabContent}>
+                <div
+                  className={`${blogStyles.tabContent} ${
+                    activeTab === "content"
+                      ? blogStyles.tabContentWithEditor
+                      : ""
+                  }`}
+                >
                   {activeTab === "main" && (
                     <div className={blogStyles.formSection}>
                       <div className={styles.row}>
@@ -562,29 +620,57 @@ export default function BlogPage() {
                         </label>
                         <label className={styles.label}>
                           {dict.blog.publishDate}
-                          <input
-                            type="text"
-                            lang={language}
+                          <DatePicker
                             value={form.published_at}
-                            onChange={(e) =>
-                              updateField("published_at", e.target.value)
+                            onChange={(value) =>
+                              updateField("published_at", value)
                             }
-                            className={styles.input}
+                            language={language}
                             placeholder={
                               language === "en" ? "YYYY-MM-DD" : "ДД.ММ.ГГГГ"
                             }
+                            minDate={new Date()}
                           />
                         </label>
                         <label className={styles.label}>
                           {dict.blog.readTime}
-                          <input
-                            value={form.read_time}
-                            onChange={(e) =>
-                              updateField("read_time", e.target.value)
-                            }
-                            className={styles.input}
-                            placeholder="6 min"
-                          />
+                          <div
+                            style={{
+                              position: "relative",
+                              display: "flex",
+                              alignItems: "center",
+                            }}
+                          >
+                            <input
+                              type="number"
+                              min="0"
+                              value={form.read_time.replace(/\s*min\s*/gi, "")}
+                              onChange={(e) => {
+                                const numValue = e.target.value.replace(
+                                  /\D/g,
+                                  ""
+                                );
+                                updateField(
+                                  "read_time",
+                                  numValue ? `${numValue} min` : ""
+                                );
+                              }}
+                              className={styles.input}
+                              placeholder="6"
+                              style={{ paddingRight: "50px" }}
+                            />
+                            <span
+                              style={{
+                                position: "absolute",
+                                right: "12px",
+                                color: "#7a7a7a",
+                                pointerEvents: "none",
+                                fontSize: "14px",
+                              }}
+                            >
+                              min
+                            </span>
+                          </div>
                         </label>
                       </div>
                     </div>
@@ -674,6 +760,30 @@ export default function BlogPage() {
                           </div>
                         )}
                       </label>
+                    </div>
+                  )}
+
+                  {activeTab === "main" && hasSelectedPost && (
+                    <div
+                      className={blogStyles.formSection}
+                      style={{
+                        marginTop: "24px",
+                        paddingTop: "24px",
+                        borderTop: "1px solid #2c2c2c",
+                      }}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => deletePost(selectedId)}
+                        className={styles.secondaryBtn}
+                        style={{
+                          background: "transparent",
+                          borderColor: "#ff6b6b",
+                          color: "#ff6b6b",
+                        }}
+                      >
+                        {dict.common.delete}
+                      </button>
                     </div>
                   )}
 

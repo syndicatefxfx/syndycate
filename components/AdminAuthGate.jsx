@@ -41,9 +41,9 @@ export default function AdminAuthGate({ children }) {
 
   if (!session) {
     return (
-      <main className={styles.page}>
+      <main className={`${styles.page} ${styles.loginPage}`}>
         <div className={styles.container}>
-          <div className={styles.panel}>
+          <div className={`${styles.panel} ${styles.loginPanel}`}>
             <div className={styles.breadcrumbs}>
               <Link href="/">← На главную</Link>
             </div>
@@ -51,7 +51,12 @@ export default function AdminAuthGate({ children }) {
             <form onSubmit={handleLogin} className={styles.form}>
               <label className={styles.label}>
                 Email
-                <input name="email" type="email" required className={styles.input} />
+                <input
+                  name="email"
+                  type="email"
+                  required
+                  className={styles.input}
+                />
               </label>
               <label className={styles.label}>
                 Password
