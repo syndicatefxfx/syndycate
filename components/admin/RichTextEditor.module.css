@@ -1,0 +1,119 @@
+.container {
+  border: 1px solid #2c2c2c;
+  border-radius: 8px;
+  background: var(--color-dark-secondary);
+  overflow: hidden;
+}
+
+.toolbar {
+  display: flex;
+  gap: 4px;
+  padding: 8px;
+  border-bottom: 1px solid #2c2c2c;
+  background: rgba(0, 0, 0, 0.2);
+  flex-wrap: wrap;
+}
+
+.button {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--color-secondary);
+  padding: 6px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+  min-width: 32px;
+}
+
+.button:hover:not(:disabled) {
+  background: rgba(14, 254, 242, 0.1);
+  border-color: rgba(14, 254, 242, 0.3);
+  color: var(--color-primary);
+}
+
+.button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.button.active {
+  background: rgba(14, 254, 242, 0.15);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.content {
+  padding: 16px;
+  min-height: 200px;
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.editor {
+  outline: none;
+  color: var(--color-secondary);
+  font-family: var(--font-inter, "Inter"), system-ui, -apple-system, sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.editor p {
+  margin: 0 0 12px 0;
+}
+
+.editor p:last-child {
+  margin-bottom: 0;
+}
+
+.editor h2 {
+  font-size: 24px;
+  font-weight: 600;
+  margin: 24px 0 12px 0;
+  color: var(--color-secondary);
+}
+
+.editor h2:first-child {
+  margin-top: 0;
+}
+
+.editor ul,
+.editor ol {
+  margin: 12px 0;
+  padding-left: 24px;
+}
+
+.editor li {
+  margin: 6px 0;
+}
+
+.editor blockquote {
+  border-left: 3px solid var(--color-primary);
+  padding-left: 16px;
+  margin: 16px 0;
+  color: rgba(255, 255, 255, 0.7);
+  font-style: italic;
+}
+
+.editor hr {
+  border: none;
+  border-top: 1px solid #2c2c2c;
+  margin: 24px 0;
+}
+
+.editor strong {
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+.editor em {
+  font-style: italic;
+}
+
+.editor .is-empty::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: rgba(255, 255, 255, 0.3);
+  pointer-events: none;
+  height: 0;
+}

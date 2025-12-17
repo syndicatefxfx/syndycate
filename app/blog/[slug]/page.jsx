@@ -59,7 +59,10 @@ export default function BlogPostPage() {
         .limit(1);
 
       if (fetchError) {
-        console.error("[Blog post] supabase error", fetchError.message || fetchError);
+        console.error(
+          "[Blog post] supabase error",
+          fetchError.message || fetchError
+        );
         setError(fetchError.message || "Failed to load post");
         const fallback = getPostBySlug(slug);
         if (fallback) {
@@ -114,7 +117,10 @@ export default function BlogPostPage() {
 
           <div className={styles.content}>
             {Array.from({ length: 4 }).map((_, idx) => (
-              <p key={idx} className={`${styles.skeletonLine} ${styles.paragraphSkeleton}`} />
+              <p
+                key={idx}
+                className={`${styles.skeletonLine} ${styles.paragraphSkeleton}`}
+              />
             ))}
           </div>
         </article>
@@ -142,8 +148,43 @@ export default function BlogPostPage() {
   }
 
   const h1 = post.meta_h1 || post.title;
-  const paragraphs = Array.isArray(post.content) ? post.content : [];
   const imageSrc = post.og_image || post.image || "/programResults.gif";
+
+  // Handle content: can be HTML string (from Rich Text Editor) or array (legacy)
+  const renderContent = () => {
+    if (!post.content) return null;
+
+    // If content is an array (legacy format), render as paragraphs
+    if (Array.isArray(post.content)) {
+      return (
+        <>
+          {post.content.map((paragraph, idx) => (
+            <p key={idx}>{paragraph}</p>
+          ))}
+        </>
+      );
+    }
+
+    // If content is a string, check if it contains HTML tags
+    const contentStr = String(post.content).trim();
+    if (!contentStr) return null;
+
+    // Check if it's HTML (contains HTML tags)
+    const hasHTML = /<[a-z][\s\S]*>/i.test(contentStr);
+
+    if (hasHTML) {
+      // Render as HTML (from Rich Text Editor)
+      return (
+        <div
+          className={styles.richContent}
+          dangerouslySetInnerHTML={{ __html: contentStr }}
+        />
+      );
+    } else {
+      // Plain text, wrap in paragraph
+      return <p>{contentStr}</p>;
+    }
+  };
 
   return (
     <main className={styles.page}>
@@ -154,7 +195,9 @@ export default function BlogPostPage() {
           <div className={styles.heroText}>
             <p className={styles.kicker}>Blog</p>
             <h1 className={styles.title}>{h1}</h1>
-            {post.subtitle && <p className={styles.subtitle}>{post.subtitle}</p>}
+            {post.subtitle && (
+              <p className={styles.subtitle}>{post.subtitle}</p>
+            )}
             <div className={styles.meta}>
               <span>
                 {post.published_at
@@ -177,11 +220,7 @@ export default function BlogPostPage() {
           </div>
         </div>
 
-        <div className={styles.content}>
-          {paragraphs.map((paragraph, idx) => (
-            <p key={idx}>{paragraph}</p>
-          ))}
-        </div>
+        <div className={styles.content}>{renderContent()}</div>
 
         <div className={styles.footerNav}>
           <Link href="/blog" className={styles.backLink}>
