@@ -1,24 +1,24 @@
 "use client";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import styles from "@/styles/Header.module.css";
 import Image from "next/image";
 import Link from "next/link";
-import {
-  supportedLanguages,
-  useDictionary,
-  useLanguage,
-} from "./LanguageProvider";
+import { supportedLanguages, useLanguage } from "./LanguageProvider";
+import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 
 export default function Header() {
   const [open, setOpen] = useState(false);
   const { language, setLanguage } = useLanguage();
-  const dictionary = useDictionary();
-  const navLabels = dictionary.header.nav;
+  const supabase = useMemo(() => createBrowserSupabaseClient(), []);
+  const [socialLinks, setSocialLinks] = useState({
+    telegram_url: "https://t.me/syndicatefxx",
+    instagram_url: "https://www.instagram.com/syndicatefx.co/",
+  });
   const navItems = [
-    { id: "program", label: navLabels.program, className: styles.button1 },
-    { id: "tariffs", label: navLabels.tariffs, className: styles.button2 },
-    { id: "faq", label: navLabels.faq, className: styles.button3 },
-    { id: "blog", label: navLabels.blog || "BLOG", className: styles.button4, href: "/blog" },
+    { id: "program", label: "PROGRAM", className: styles.button1 },
+    { id: "tariffs", label: "TARIFFS", className: styles.button2 },
+    { id: "faq", label: "FAQ", className: styles.button3 },
+    { id: "blog", label: "BLOG", className: styles.button4, href: "/blog" },
   ];
 
   // блокируем прокрутку фона, когда открыт оверлей
@@ -37,6 +37,25 @@ export default function Header() {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
+  // Загрузка ссылок на соцсети
+  useEffect(() => {
+    if (!supabase) return;
+    supabase
+      .from("site_settings")
+      .select("telegram_url, instagram_url")
+      .eq("id", 1)
+      .single()
+      .then(({ data, error }) => {
+        if (!error && data) {
+          setSocialLinks({
+            telegram_url: data.telegram_url || "https://t.me/syndicatefxx",
+            instagram_url:
+              data.instagram_url || "https://www.instagram.com/syndicatefx.co/",
+          });
+        }
+      });
+  }, [supabase]);
+
   // плавный скролл к секции
   const goTo = useCallback((id) => {
     const el = document.getElementById(id) || document.querySelector(id);
@@ -53,7 +72,11 @@ export default function Header() {
 
   return (
     <header className={styles.header}>
-      <Link href="/" className={styles.logoContainer} aria-label="Go to homepage">
+      <Link
+        href="/"
+        className={styles.logoContainer}
+        aria-label="Go to homepage"
+      >
         <Image
           src="/logo.svg"
           alt="SNDCT Logo"
@@ -68,7 +91,7 @@ export default function Header() {
       {/* десктопная навигация (>1280px) */}
       <div className={styles.circles}>
         <nav className={styles.nav}>
-          {navItems.map(({ id, label, className }) => (
+          {navItems.map(({ id, label, className }) =>
             label === "BLOG" || id === "blog" ? (
               <Link key={id} href="/blog" className={className}>
                 {label}
@@ -83,7 +106,7 @@ export default function Header() {
                 {label}
               </button>
             )
-          ))}
+          )}
         </nav>
         <div className={styles.languageSwitch}>
           {supportedLanguages.map(({ code, label }) => (
@@ -106,7 +129,7 @@ export default function Header() {
             rel="noopener noreferrer"
             className={styles.circle}
             aria-label="Instagram"
-            href="https://www.instagram.com/syndicatefx.co/"
+            href={socialLinks.instagram_url}
           >
             <svg
               width="24"
@@ -125,7 +148,7 @@ export default function Header() {
             target="_blank"
             rel="noopener noreferrer"
             className={styles.circle}
-            href="https://t.me/syndicatefxx"
+            href={socialLinks.telegram_url}
             aria-label="Telegram"
           >
             <svg
@@ -150,8 +173,10 @@ export default function Header() {
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-controls="menu-overlay"
+        lang="en"
+        translate="no"
       >
-        {dictionary.header.menuButton}
+        MENU
       </button>
 
       {/* оверлей-меню */}
@@ -168,11 +193,23 @@ export default function Header() {
         <nav className={styles.overlayNav}>
           {navItems.map(({ id, label, href }) =>
             href ? (
-              <Link key={id} href={href} onClick={() => setOpen(false)}>
+              <Link
+                key={id}
+                href={href}
+                onClick={() => setOpen(false)}
+                lang="en"
+                translate="no"
+              >
                 {label}
               </Link>
             ) : (
-              <button key={id} type="button" onClick={() => goTo(id)}>
+              <button
+                key={id}
+                type="button"
+                onClick={() => goTo(id)}
+                lang="en"
+                translate="no"
+              >
                 {label}
               </button>
             )
@@ -199,7 +236,7 @@ export default function Header() {
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Telegram"
-            href="https://t.me/syndicatefxx"
+            href={socialLinks.telegram_url}
           >
             <svg
               width="64"
@@ -219,7 +256,7 @@ export default function Header() {
           <a
             target="_blank"
             rel="noopener noreferrer"
-            href="https://www.instagram.com/syndicatefx.co/"
+            href={socialLinks.instagram_url}
             aria-label="Instagram"
           >
             <svg

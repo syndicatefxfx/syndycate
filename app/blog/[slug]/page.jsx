@@ -9,7 +9,7 @@ const FALLBACK_META = {
 };
 
 export async function generateMetadata({ params }) {
-  const slug = params?.slug;
+  const { slug } = await params;
   if (!slug) return FALLBACK_META;
 
   let title = FALLBACK_META.title;
@@ -50,6 +50,7 @@ export async function generateMetadata({ params }) {
   };
 }
 
-export default function BlogPostPage({ params }) {
-  return <BlogPostClient slug={params?.slug} />;
+export default async function BlogPostPage({ params }) {
+  const { slug } = await params;
+  return <BlogPostClient slug={slug} />;
 }

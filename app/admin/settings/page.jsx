@@ -24,6 +24,14 @@ export default function SettingsPage() {
   const [passwordMessage, setPasswordMessage] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [passwordSaving, setPasswordSaving] = useState(false);
+  const [socialForm, setSocialForm] = useState({
+    telegram_url: "",
+    instagram_url: "",
+  });
+  const [socialLoading, setSocialLoading] = useState(true);
+  const [socialSaving, setSocialSaving] = useState(false);
+  const [socialMessage, setSocialMessage] = useState("");
+  const [socialError, setSocialError] = useState("");
 
   const token = session?.access_token || "";
   const isSuperAdmin =
@@ -56,6 +64,71 @@ export default function SettingsPage() {
   useEffect(() => {
     fetchUsers();
   }, [token, isSuperAdmin]);
+
+  const fetchSocialLinks = async () => {
+    if (!supabase) return;
+    setSocialLoading(true);
+    setSocialError("");
+    try {
+      const { data, error } = await supabase
+        .from("site_settings")
+        .select("telegram_url, instagram_url")
+        .eq("id", 1)
+        .single();
+
+      if (error && error.code !== "PGRST116") {
+        // PGRST116 = no rows returned
+        throw error;
+      }
+
+      setSocialForm({
+        telegram_url: data?.telegram_url || "https://t.me/syndicatefxx",
+        instagram_url:
+          data?.instagram_url || "https://www.instagram.com/syndicatefx.co/",
+      });
+    } catch (err) {
+      setSocialError(err.message || "Failed to load social links");
+      // Set defaults if error
+      setSocialForm({
+        telegram_url: "https://t.me/syndicatefxx",
+        instagram_url: "https://www.instagram.com/syndicatefx.co/",
+      });
+    } finally {
+      setSocialLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchSocialLinks();
+  }, [supabase]);
+
+  const saveSocialLinks = async () => {
+    if (!supabase) return;
+    setSocialSaving(true);
+    setSocialError("");
+    setSocialMessage("");
+    try {
+      const { error } = await supabase.from("site_settings").upsert(
+        {
+          id: 1,
+          telegram_url: socialForm.telegram_url,
+          instagram_url: socialForm.instagram_url,
+        },
+        { onConflict: "id" }
+      );
+
+      if (error) {
+        throw error;
+      }
+
+      setSocialMessage(dict.common.saved);
+      setTimeout(() => setSocialMessage(""), 3000);
+    } catch (err) {
+      setSocialError(err.message || "Failed to save social links");
+    } finally {
+      setSocialSaving(false);
+    }
+  };
 
   const createUser = async (event) => {
     event.preventDefault();
@@ -138,7 +211,11 @@ export default function SettingsPage() {
         throw new Error(updateError.message);
       }
       setPasswordMessage(dict.settings.passwordChanged);
-      setPasswordForm({ oldPassword: "", newPassword: "", confirmPassword: "" });
+      setPasswordForm({
+        oldPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
     } catch (err) {
       setPasswordError(err.message || dict.settings.passwordChange);
     } finally {
@@ -152,7 +229,9 @@ export default function SettingsPage() {
         <header className={styles.topBar}>
           <div>
             <div className={styles.kicker}>{dict.settings.kicker}</div>
-            <div className={styles.heading} lang="en" translate="no">Interface</div>
+            <div className={styles.heading} lang="en" translate="no">
+              Interface
+            </div>
             <div className={styles.breadcrumbs}>
               <Link href="/admin">{dict.common.backSections}</Link>
             </div>
@@ -188,7 +267,10 @@ export default function SettingsPage() {
                 type="password"
                 value={passwordForm.oldPassword}
                 onChange={(e) =>
-                  setPasswordForm((prev) => ({ ...prev, oldPassword: e.target.value }))
+                  setPasswordForm((prev) => ({
+                    ...prev,
+                    oldPassword: e.target.value,
+                  }))
                 }
                 className={styles.input}
                 required
@@ -200,7 +282,10 @@ export default function SettingsPage() {
                 type="password"
                 value={passwordForm.newPassword}
                 onChange={(e) =>
-                  setPasswordForm((prev) => ({ ...prev, newPassword: e.target.value }))
+                  setPasswordForm((prev) => ({
+                    ...prev,
+                    newPassword: e.target.value,
+                  }))
                 }
                 className={styles.input}
                 required
@@ -212,18 +297,29 @@ export default function SettingsPage() {
                 type="password"
                 value={passwordForm.confirmPassword}
                 onChange={(e) =>
-                  setPasswordForm((prev) => ({ ...prev, confirmPassword: e.target.value }))
+                  setPasswordForm((prev) => ({
+                    ...prev,
+                    confirmPassword: e.target.value,
+                  }))
                 }
                 className={styles.input}
                 required
               />
             </label>
-            <button type="submit" className={styles.primaryBtn} disabled={passwordSaving}>
-              {passwordSaving ? dict.common.saving : dict.settings.passwordChange}
+            <button
+              type="submit"
+              className={styles.primaryBtn}
+              disabled={passwordSaving}
+            >
+              {passwordSaving
+                ? dict.common.saving
+                : dict.settings.passwordChange}
             </button>
           </form>
           {passwordError && <div className={styles.error}>{passwordError}</div>}
-          {passwordMessage && <div className={styles.success}>{passwordMessage}</div>}
+          {passwordMessage && (
+            <div className={styles.success}>{passwordMessage}</div>
+          )}
         </section>
 
         {isSuperAdmin && (
@@ -236,7 +332,9 @@ export default function SettingsPage() {
                 <input
                   type="email"
                   value={form.email}
-                  onChange={(e) => setForm((prev) => ({ ...prev, email: e.target.value }))}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, email: e.target.value }))
+                  }
                   className={styles.input}
                   required
                 />
@@ -246,12 +344,18 @@ export default function SettingsPage() {
                 <input
                   type="password"
                   value={form.password}
-                  onChange={(e) => setForm((prev) => ({ ...prev, password: e.target.value }))}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, password: e.target.value }))
+                  }
                   className={styles.input}
                   required
                 />
               </label>
-              <button type="submit" className={styles.primaryBtn} disabled={creating}>
+              <button
+                type="submit"
+                className={styles.primaryBtn}
+                disabled={creating}
+              >
                 {creating ? dict.common.saving : dict.settings.usersAdd}
               </button>
             </form>
@@ -264,7 +368,9 @@ export default function SettingsPage() {
                   <div key={user.id} className={styles.itemCard}>
                     <div className={styles.itemHeader}>
                       <div className={styles.itemIndex}>
-                        {user.is_superadmin ? dict.settings.usersSuperadmin : "Admin"}
+                        {user.is_superadmin
+                          ? dict.settings.usersSuperadmin
+                          : "Admin"}
                       </div>
                       <div className={styles.muted}>
                         {user.created_at
@@ -294,6 +400,66 @@ export default function SettingsPage() {
             {userError && <div className={styles.error}>{userError}</div>}
           </section>
         )}
+
+        <section className={styles.panel}>
+          <div className={styles.kicker}>{dict.settings.socialTitle}</div>
+          <p className={styles.muted}>{dict.settings.socialDesc}</p>
+          {socialLoading ? (
+            <div className={styles.muted}>{dict.common.loading}</div>
+          ) : (
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                saveSocialLinks();
+              }}
+              className={styles.form}
+            >
+              <label className={styles.label}>
+                {dict.settings.socialTelegram}
+                <input
+                  type="url"
+                  value={socialForm.telegram_url}
+                  onChange={(e) =>
+                    setSocialForm((prev) => ({
+                      ...prev,
+                      telegram_url: e.target.value,
+                    }))
+                  }
+                  className={styles.input}
+                  placeholder="https://t.me/..."
+                  required
+                />
+              </label>
+              <label className={styles.label}>
+                {dict.settings.socialInstagram}
+                <input
+                  type="url"
+                  value={socialForm.instagram_url}
+                  onChange={(e) =>
+                    setSocialForm((prev) => ({
+                      ...prev,
+                      instagram_url: e.target.value,
+                    }))
+                  }
+                  className={styles.input}
+                  placeholder="https://www.instagram.com/..."
+                  required
+                />
+              </label>
+              <button
+                type="submit"
+                className={styles.primaryBtn}
+                disabled={socialSaving}
+              >
+                {socialSaving ? dict.common.saving : dict.common.save}
+              </button>
+            </form>
+          )}
+          {socialError && <div className={styles.error}>{socialError}</div>}
+          {socialMessage && (
+            <div className={styles.success}>{socialMessage}</div>
+          )}
+        </section>
 
         <section className={styles.panel}>
           <div className={styles.muted}>{dict.settings.comingSoon}</div>
