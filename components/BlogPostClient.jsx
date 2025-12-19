@@ -52,6 +52,7 @@ export default function BlogPostClient({ slug }) {
           `
         )
         .eq("slug", slug)
+        .eq("locale", language)
         .eq("status", "published")
         .order("published_at", { ascending: false, nullsLast: true })
         .limit(1);
@@ -72,6 +73,45 @@ export default function BlogPostClient({ slug }) {
 
       if (data?.length) {
         setPost(data[0]);
+        setLoading(false);
+        return;
+      }
+
+      // fallback: другая локаль
+      const { data: anyLocale, error: anyErr } = await supabase
+        .from("blog_posts")
+        .select(
+          `
+            slug,
+            locale,
+            title,
+            subtitle,
+            excerpt,
+            content,
+            read_time,
+            og_image,
+            published_at,
+            meta_h1
+          `
+        )
+        .eq("slug", slug)
+        .eq("status", "published")
+        .order("published_at", { ascending: false, nullsLast: true })
+        .limit(1);
+
+      if (anyErr) {
+        console.error("[Blog post] supabase fallback error", anyErr.message || anyErr);
+        setError(anyErr.message || "Failed to load post");
+        const fallback = getPostBySlug(slug);
+        if (fallback) {
+          setPost(fallback);
+        }
+        setLoading(false);
+        return;
+      }
+
+      if (anyLocale?.length) {
+        setPost(anyLocale[0]);
         setLoading(false);
         return;
       }

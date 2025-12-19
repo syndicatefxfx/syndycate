@@ -10,6 +10,7 @@ import { useAdminAuth } from "@/components/AdminAuthProvider";
 import { useAdminDict, useAdminLocale } from "@/components/AdminLocaleProvider";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 import DatePicker from "@/components/admin/DatePicker";
+import AdminTopBarActions from "@/components/AdminTopBarActions";
 
 const RichTextEditor = dynamic(
   () => import("@/components/admin/RichTextEditor"),
@@ -398,7 +399,7 @@ export default function BlogPage() {
               <Link href="/admin">{dict.common.backSections}</Link>
             </div>
           </div>
-          <div className={styles.actions}>
+          <AdminTopBarActions>
             <select
               value={locale}
               onChange={(e) => setLocale(e.target.value)}
@@ -425,10 +426,7 @@ export default function BlogPage() {
                   : dict.common.save}
               </button>
             )}
-            <button onClick={logout} className={styles.secondaryBtn}>
-              {dict.common.logout}
-            </button>
-          </div>
+          </AdminTopBarActions>
         </header>
 
         <div className={blogStyles.masterDetail}>

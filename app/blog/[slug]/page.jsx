@@ -25,16 +25,25 @@ export async function generateMetadata({ params }) {
 
   try {
     const supabase = createServerSupabaseClient();
-    const { data, error } = await supabase
+    const { data: enData } = await supabase
       .from("blog_posts")
-      .select("meta_title, meta_description, og_image, title, excerpt")
+      .select("meta_title, meta_description, og_image, title, excerpt, locale")
+      .eq("slug", slug)
+      .eq("locale", "en")
+      .eq("status", "published")
+      .order("published_at", { ascending: false, nullsLast: true })
+      .limit(1);
+
+    const { data: anyData } = await supabase
+      .from("blog_posts")
+      .select("meta_title, meta_description, og_image, title, excerpt, locale")
       .eq("slug", slug)
       .eq("status", "published")
       .order("published_at", { ascending: false, nullsLast: true })
       .limit(1);
 
-    if (!error && data?.length) {
-      const record = data[0];
+    const record = enData?.[0] || anyData?.[0];
+    if (record) {
       title = record.meta_title || record.title || title;
       description = record.meta_description || record.excerpt || description;
       ogImage = record.og_image || ogImage;

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import styles from "@/styles/Admin.module.css";
 import { useAdminDict } from "@/components/AdminLocaleProvider";
+import AdminTopBarActions from "@/components/AdminTopBarActions";
 
 const sections = [
   {
@@ -39,6 +40,7 @@ export default function AdminDashboard() {
             <div className={styles.heading}>SYNDICATE</div>
             <div className={styles.subtitle}>{dict.admin.subtitle}</div>
           </div>
+          <AdminTopBarActions />
         </header>
 
         <section className={styles.cardGrid}>

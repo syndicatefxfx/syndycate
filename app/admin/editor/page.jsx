@@ -3,6 +3,7 @@
 import Link from "next/link";
 import styles from "@/styles/Admin.module.css";
 import { useAdminDict } from "@/components/AdminLocaleProvider";
+import AdminTopBarActions from "@/components/AdminTopBarActions";
 
 const blocks = [
   {
@@ -37,6 +38,10 @@ const blocks = [
     slug: "/admin/editor/faq",
     title: "FAQ",
   },
+  {
+    slug: "/admin/editor/blog",
+    title: "BLOG PAGE",
+  },
 ];
 
 export default function EditorIndex() {
@@ -53,6 +58,7 @@ export default function EditorIndex() {
               <Link href="/admin">{dict.common.backSections}</Link>
             </div>
           </div>
+          <AdminTopBarActions />
         </header>
 
         <section className={styles.cardGrid}>

@@ -5,6 +5,8 @@ import Link from "next/link";
 import styles from "@/styles/Admin.module.css";
 import { useAdminAuth } from "@/components/AdminAuthProvider";
 import { useAdminDict } from "@/components/AdminLocaleProvider";
+import AdminTopBarActions from "@/components/AdminTopBarActions";
+import { useToast } from "@/components/admin/ToastProvider";
 
 const locales = [
   { code: "en", label: "English" },
@@ -14,21 +16,18 @@ const locales = [
 export default function ResultsEditorPage() {
   const { supabase, session, loading: authLoading, logout } = useAdminAuth();
   const dict = useAdminDict();
+  const { showToast } = useToast();
   const [loading, setLoading] = useState(true);
   const [locale, setLocale] = useState("en");
   const [titleTop, setTitleTop] = useState("");
   const [titleHighlight, setTitleHighlight] = useState("");
   const [bullets, setBullets] = useState([]);
   const [cta, setCta] = useState("");
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (authLoading || !session || !supabase) return;
     setLoading(true);
-    setError("");
-    setMessage("");
 
     supabase
       .from("results_sections")
@@ -46,7 +45,7 @@ export default function ResultsEditorPage() {
       .limit(1)
       .then(({ data, error: fetchError }) => {
         if (fetchError) {
-          setError(fetchError.message);
+          showToast(fetchError.message, "error");
           setLoading(false);
           return;
         }
@@ -74,8 +73,6 @@ export default function ResultsEditorPage() {
   const saveSection = async () => {
     if (!supabase || !session) return;
     setSaving(true);
-    setError("");
-    setMessage("");
 
     const { error: upsertError } = await supabase
       .from("results_sections")
@@ -92,9 +89,9 @@ export default function ResultsEditorPage() {
       );
 
     if (upsertError) {
-      setError(upsertError.message);
+      showToast(upsertError.message, "error");
     } else {
-      setMessage(dict.common.saved);
+      showToast(dict.common.saved, "success");
     }
     setSaving(false);
   };
@@ -118,7 +115,7 @@ export default function ResultsEditorPage() {
               <Link href="/admin/editor">{dict.common.backBlocks}</Link>
             </div>
           </div>
-          <div className={styles.actions}>
+          <AdminTopBarActions>
             <select
               value={locale}
               onChange={(e) => setLocale(e.target.value)}
@@ -137,10 +134,7 @@ export default function ResultsEditorPage() {
             >
               {saving ? dict.common.saving : dict.common.save}
             </button>
-            <button onClick={logout} className={styles.secondaryBtn}>
-              {dict.common.logout}
-            </button>
-          </div>
+          </AdminTopBarActions>
         </header>
 
         {loading ? (
@@ -231,9 +225,6 @@ export default function ResultsEditorPage() {
             </section>
           </>
         )}
-
-        {error && <div className={styles.error}>{error}</div>}
-        {message && <div className={styles.success}>{message}</div>}
       </div>
     </main>
   );

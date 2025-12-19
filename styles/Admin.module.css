@@ -21,9 +21,10 @@
 .topBar {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   gap: 16px;
   padding: 16px 0 24px;
+  min-height: 80px;
 }
 
 .kicker {
@@ -54,6 +55,8 @@
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
+  align-items: center;
+  min-height: 42px;
 }
 
 .card {

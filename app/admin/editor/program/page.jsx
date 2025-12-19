@@ -6,6 +6,8 @@ import styles from "@/styles/Admin.module.css";
 import { useAdminAuth } from "@/components/AdminAuthProvider";
 import { useAdminDict } from "@/components/AdminLocaleProvider";
 import { useAdminLocale } from "@/components/AdminLocaleProvider";
+import AdminTopBarActions from "@/components/AdminTopBarActions";
+import { useToast } from "@/components/admin/ToastProvider";
 
 const locales = [
   { code: "en", label: "English" },
@@ -16,6 +18,7 @@ export default function ProgramEditorPage() {
   const { supabase, session, loading: authLoading, logout } = useAdminAuth();
   const dict = useAdminDict();
   const { language } = useAdminLocale();
+  const { showToast } = useToast();
   const t = (ru, en) => (language === "en" ? en : ru);
   const [loading, setLoading] = useState(true);
   const [locale, setLocale] = useState("en");
@@ -24,8 +27,6 @@ export default function ProgramEditorPage() {
   const [buttons, setButtons] = useState({ expand: "", collapse: "" });
   const [previewCount, setPreviewCount] = useState(8);
   const [modules, setModules] = useState([]);
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -51,7 +52,7 @@ export default function ProgramEditorPage() {
       .limit(1)
       .then(({ data, error: fetchError }) => {
         if (fetchError) {
-          setError(fetchError.message);
+          showToast(fetchError.message, "error");
           setLoading(false);
           return;
         }
@@ -108,8 +109,6 @@ export default function ProgramEditorPage() {
   const saveSection = async () => {
     if (!supabase || !session) return;
     setSaving(true);
-    setError("");
-    setMessage("");
 
     const { data: upserted, error: upsertError } = await supabase
       .from("program_sections")
@@ -129,14 +128,14 @@ export default function ProgramEditorPage() {
       .limit(1);
 
     if (upsertError) {
-      setError(upsertError.message);
+      showToast(upsertError.message, "error");
       setSaving(false);
       return;
     }
 
     const sectionId = upserted?.[0]?.id;
     if (!sectionId) {
-      setError(dict.common.errorSectionId);
+      showToast(dict.common.errorSectionId, "error");
       setSaving(false);
       return;
     }
@@ -155,9 +154,9 @@ export default function ProgramEditorPage() {
       .insert(payload);
 
     if (insertError) {
-      setError(insertError.message);
+      showToast(insertError.message, "error");
     } else {
-      setMessage(dict.common.saved);
+      showToast(dict.common.saved, "success");
     }
     setSaving(false);
   };
@@ -181,7 +180,7 @@ export default function ProgramEditorPage() {
               <Link href="/admin/editor">{dict.common.backBlocks}</Link>
             </div>
           </div>
-          <div className={styles.actions}>
+          <AdminTopBarActions>
             <select
               value={locale}
               onChange={(e) => setLocale(e.target.value)}
@@ -200,10 +199,7 @@ export default function ProgramEditorPage() {
             >
               {saving ? dict.common.saving : dict.common.save}
             </button>
-            <button onClick={logout} className={styles.secondaryBtn}>
-              {dict.common.logout}
-            </button>
-          </div>
+          </AdminTopBarActions>
         </header>
 
         {loading ? (
@@ -427,9 +423,6 @@ export default function ProgramEditorPage() {
             </section>
           </>
         )}
-
-        {error && <div className={styles.error}>{error}</div>}
-        {message && <div className={styles.success}>{message}</div>}
       </div>
     </main>
   );

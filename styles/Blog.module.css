@@ -59,6 +59,11 @@
   align-items: stretch; /* Ensure cards in the same row have equal height */
 }
 
+.grid.singleCard {
+  max-width: 500px;
+  margin: 0;
+}
+
 .muted {
   color: #8b8b8b;
   padding: 8px 0 16px;

@@ -6,6 +6,8 @@ import styles from "@/styles/Admin.module.css";
 import { useAdminAuth } from "@/components/AdminAuthProvider";
 import { useAdminDict } from "@/components/AdminLocaleProvider";
 import { useAdminLocale } from "@/components/AdminLocaleProvider";
+import AdminTopBarActions from "@/components/AdminTopBarActions";
+import { useToast } from "@/components/admin/ToastProvider";
 
 const locales = [
   { code: "en", label: "English" },
@@ -16,6 +18,7 @@ export default function HeroEditorPage() {
   const { supabase, session, loading: authLoading, logout } = useAdminAuth();
   const dict = useAdminDict();
   const { language } = useAdminLocale();
+  const { showToast } = useToast();
   const t = (ru, en) => (language === "en" ? en : ru);
   const [loading, setLoading] = useState(true);
   const [locale, setLocale] = useState("en");
@@ -27,15 +30,11 @@ export default function HeroEditorPage() {
     text_above_button: "",
     cta: "",
   });
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (authLoading || !session || !supabase) return;
     setLoading(true);
-    setError("");
-    setMessage("");
 
     supabase
       .from("hero_sections")
@@ -54,7 +53,7 @@ export default function HeroEditorPage() {
       .limit(1)
       .then(({ data, error: fetchError }) => {
         if (fetchError) {
-          setError(fetchError.message);
+          showToast(fetchError.message, "error");
           setLoading(false);
           return;
         }
@@ -119,8 +118,6 @@ export default function HeroEditorPage() {
   const saveSection = async () => {
     if (!supabase || !session) return;
     setSaving(true);
-    setError("");
-    setMessage("");
 
     const { error: upsertError } = await supabase.from("hero_sections").upsert(
       {
@@ -139,9 +136,9 @@ export default function HeroEditorPage() {
     );
 
     if (upsertError) {
-      setError(upsertError.message);
+      showToast(upsertError.message, "error");
     } else {
-      setMessage(dict.common.saved);
+      showToast(dict.common.saved, "success");
     }
     setSaving(false);
   };
@@ -165,7 +162,7 @@ export default function HeroEditorPage() {
               <Link href="/admin/editor">{dict.common.backBlocks}</Link>
             </div>
           </div>
-          <div className={styles.actions}>
+          <AdminTopBarActions>
             <select
               value={locale}
               onChange={(e) => setLocale(e.target.value)}
@@ -184,10 +181,7 @@ export default function HeroEditorPage() {
             >
               {saving ? dict.common.saving : dict.common.save}
             </button>
-            <button onClick={logout} className={styles.secondaryBtn}>
-              {dict.common.logout}
-            </button>
-          </div>
+          </AdminTopBarActions>
         </header>
 
         {loading ? (
@@ -296,9 +290,6 @@ export default function HeroEditorPage() {
             </section>
           </>
         )}
-
-        {error && <div className={styles.error}>{error}</div>}
-        {message && <div className={styles.success}>{message}</div>}
       </div>
     </main>
   );

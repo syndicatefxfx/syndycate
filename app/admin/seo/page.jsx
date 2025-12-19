@@ -6,6 +6,7 @@ import styles from "@/styles/Admin.module.css";
 import { useAdminAuth } from "@/components/AdminAuthProvider";
 import { useAdminDict } from "@/components/AdminLocaleProvider";
 import { useAdminLocale } from "@/components/AdminLocaleProvider";
+import AdminTopBarActions from "@/components/AdminTopBarActions";
 
 const locales = [
   { code: "en", label: "English" },
@@ -115,7 +116,7 @@ export default function SeoPage() {
               <Link href="/admin">{dict.common.backSections}</Link>
             </div>
           </div>
-          <div className={styles.actions}>
+          <AdminTopBarActions>
             <select
               value={pageSlug}
               onChange={(e) => setPageSlug(e.target.value)}
@@ -149,10 +150,7 @@ export default function SeoPage() {
             >
               {saving ? dict.common.saving : dict.common.save}
             </button>
-            <button onClick={logout} className={styles.secondaryBtn}>
-              {dict.common.logout}
-            </button>
-          </div>
+          </AdminTopBarActions>
         </header>
 
         {loading ? (

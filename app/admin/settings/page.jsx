@@ -6,6 +6,7 @@ import styles from "@/styles/Admin.module.css";
 import { useAdminDict, useAdminLocale } from "@/components/AdminLocaleProvider";
 import { adminLanguages } from "@/lib/admin/i18n";
 import { useAdminAuth } from "@/components/AdminAuthProvider";
+import AdminTopBarActions from "@/components/AdminTopBarActions";
 
 export default function SettingsPage() {
   const dict = useAdminDict();
@@ -236,6 +237,7 @@ export default function SettingsPage() {
               <Link href="/admin">{dict.common.backSections}</Link>
             </div>
           </div>
+          <AdminTopBarActions />
         </header>
 
         <section className={styles.panel}>

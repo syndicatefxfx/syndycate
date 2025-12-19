@@ -4,10 +4,12 @@ import { useState } from "react";
 import Link from "next/link";
 import styles from "@/styles/Admin.module.css";
 import { useAdminAuth } from "./AdminAuthProvider";
+import { useAdminDict } from "./AdminLocaleProvider";
 
 export default function AdminAuthGate({ children }) {
-  const { supabase, session, loading, error, login, clearError } =
+  const { supabase, session, loading, error, login, clearError, logout } =
     useAdminAuth();
+  const dict = useAdminDict();
   const [message, setMessage] = useState("");
 
   const handleLogin = async (event) => {

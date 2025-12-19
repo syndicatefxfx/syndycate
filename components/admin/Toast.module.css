@@ -1,0 +1,120 @@
+.toast {
+  position: fixed;
+  top: 20px;
+  right: clamp(16px, 4vw, 48px);
+  z-index: 10000;
+  min-width: 300px;
+  max-width: 500px;
+  background: var(--color-dark-secondary);
+  border: 1px solid #2c2c2c;
+  border-radius: 12px;
+  padding: 16px 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  animation: slideIn 0.3s ease-out;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.toast.success {
+  border-color: var(--color-primary);
+  background: linear-gradient(
+    135deg,
+    rgba(14, 254, 242, 0.1) 0%,
+    var(--color-dark-secondary) 100%
+  );
+}
+
+.toast.error {
+  border-color: #ff6b6b;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 107, 107, 0.1) 0%,
+    var(--color-dark-secondary) 100%
+  );
+}
+
+.content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+}
+
+.message {
+  color: var(--color-secondary);
+  font-size: 14px;
+  line-height: 1.5;
+  flex: 1;
+}
+
+.toast.success .message {
+  color: var(--color-primary);
+}
+
+.toast.error .message {
+  color: #ff6b6b;
+}
+
+.close {
+  background: none;
+  border: none;
+  color: var(--color-secondary);
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s ease;
+  flex-shrink: 0;
+}
+
+.close:hover {
+  color: var(--color-primary);
+}
+
+.toast.error .close:hover {
+  color: #ff6b6b;
+}
+
+.container {
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 10000;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px clamp(16px, 4vw, 48px);
+}
+
+.container > * {
+  pointer-events: auto;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@media (max-width: 640px) {
+  .toast {
+    min-width: auto;
+    width: calc(100% - 32px);
+    right: 16px;
+    left: 16px;
+  }
+}
+
