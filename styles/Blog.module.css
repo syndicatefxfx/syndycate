@@ -60,8 +60,10 @@
 }
 
 .grid.singleCard {
-  max-width: 500px;
-  margin: 0;
+  max-width: 1200px;
+  margin: 0 auto;
+  grid-template-columns: 500px;
+  justify-content: start;
 }
 
 .muted {

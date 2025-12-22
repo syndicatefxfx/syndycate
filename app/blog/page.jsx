@@ -158,7 +158,9 @@ export default function BlogIndexPage() {
             </div>
           )}
           {!loading && !posts.length && (
-            <div className={styles.muted}>No articles yet.</div>
+            <div className={styles.grid}>
+              <div className={styles.muted}>No articles yet.</div>
+            </div>
           )}
           <div
             className={`${styles.grid} ${

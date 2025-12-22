@@ -7,6 +7,7 @@ import { useAdminAuth } from "@/components/AdminAuthProvider";
 import { useAdminDict } from "@/components/AdminLocaleProvider";
 import { useAdminLocale } from "@/components/AdminLocaleProvider";
 import AdminTopBarActions from "@/components/AdminTopBarActions";
+import { useToast } from "@/components/admin/ToastProvider";
 
 const locales = [
   { code: "en", label: "English" },
@@ -19,6 +20,7 @@ export default function SeoPage() {
   const { supabase, session, loading: authLoading, logout } = useAdminAuth();
   const dict = useAdminDict();
   const { language } = useAdminLocale();
+  const { showToast } = useToast();
   const t = (ru, en) => (language === "en" ? en : ru);
   const [loading, setLoading] = useState(true);
   const [locale, setLocale] = useState("en");
@@ -30,15 +32,11 @@ export default function SeoPage() {
     canonical: "",
     og_image: "",
   });
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (authLoading || !session || !supabase) return;
     setLoading(true);
-    setError("");
-    setMessage("");
 
     supabase
       .from("pages")
@@ -49,7 +47,7 @@ export default function SeoPage() {
       .limit(1)
       .then(({ data, error: fetchError }) => {
         if (fetchError) {
-          setError(fetchError.message);
+          showToast(fetchError.message, "error");
           setLoading(false);
           return;
         }
@@ -72,8 +70,6 @@ export default function SeoPage() {
   const savePage = async () => {
     if (!supabase || !session) return;
     setSaving(true);
-    setError("");
-    setMessage("");
 
     const { error: upsertError } = await supabase.from("pages").upsert(
       {
@@ -90,9 +86,9 @@ export default function SeoPage() {
     );
 
     if (upsertError) {
-      setError(upsertError.message);
+      showToast(upsertError.message, "error");
     } else {
-      setMessage(dict.common.saved);
+      showToast(dict.common.saved, "success");
     }
     setSaving(false);
   };
@@ -231,9 +227,6 @@ export default function SeoPage() {
             </label>
           </section>
         )}
-
-        {error && <div className={styles.error}>{error}</div>}
-        {message && <div className={styles.success}>{message}</div>}
       </div>
     </main>
   );

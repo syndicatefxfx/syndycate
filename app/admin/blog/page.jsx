@@ -11,6 +11,7 @@ import { useAdminDict, useAdminLocale } from "@/components/AdminLocaleProvider";
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 import DatePicker from "@/components/admin/DatePicker";
 import AdminTopBarActions from "@/components/AdminTopBarActions";
+import { useToast } from "@/components/admin/ToastProvider";
 
 const RichTextEditor = dynamic(
   () => import("@/components/admin/RichTextEditor"),
@@ -149,6 +150,7 @@ export default function BlogPage() {
   );
   const dict = useAdminDict();
   const { language } = useAdminLocale();
+  const { showToast } = useToast();
 
   const [locale, setLocale] = useState("en");
   const [posts, setPosts] = useState([]);
@@ -157,8 +159,6 @@ export default function BlogPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState("main");
   const [isCreatingMode, setIsCreatingMode] = useState(false);
 
@@ -173,7 +173,6 @@ export default function BlogPage() {
 
   const fetchPosts = () => {
     setLoading(true);
-    setError("");
     supabase
       .from("blog_posts")
       .select(
@@ -199,7 +198,7 @@ export default function BlogPage() {
       .order("created_at", { ascending: false })
       .then(({ data, error: fetchError }) => {
         if (fetchError) {
-          setError(fetchError.message);
+          showToast(fetchError.message, "error");
         } else {
           setPosts(data || []);
         }
@@ -223,8 +222,6 @@ export default function BlogPage() {
         ? formatDateForInput(post.published_at, language)
         : today,
     });
-    setMessage("");
-    setError("");
     setActiveTab("main");
   };
 
@@ -238,8 +235,6 @@ export default function BlogPage() {
       ...emptyPost,
       published_at: today,
     });
-    setMessage("");
-    setError("");
     setActiveTab("main");
     setIsCreatingMode(true);
   };
@@ -253,12 +248,10 @@ export default function BlogPage() {
     const file = event.target.files?.[0];
     if (!file) return;
     if (file.size > MAX_FILE_SIZE) {
-      setError(dict.blog.uploadTooBig);
+      showToast(dict.blog.uploadTooBig, "error");
       return;
     }
     setUploading(true);
-    setError("");
-    setMessage("");
     const ext = file.name.split(".").pop() || "jpg";
     const safeSlug = (form.slug || "post").trim() || "post";
     const path = `${locale}/${safeSlug}-${Date.now()}.${ext}`;
@@ -270,16 +263,16 @@ export default function BlogPage() {
         contentType: file.type || undefined,
       });
     if (uploadError) {
-      setError(`${dict.blog.uploadError}: ${uploadError.message}`);
+      showToast(`${dict.blog.uploadError}: ${uploadError.message}`, "error");
       setUploading(false);
       return;
     }
     const { data } = supabase.storage.from(BLOG_BUCKET).getPublicUrl(path);
     if (data?.publicUrl) {
       updateField("og_image", data.publicUrl);
-      setMessage(dict.common.saved);
+      showToast(dict.common.saved, "success");
     } else {
-      setError(dict.blog.uploadError);
+      showToast(dict.blog.uploadError, "error");
     }
     setUploading(false);
   };
@@ -288,17 +281,15 @@ export default function BlogPage() {
     if (!supabase || !session) return;
     const slug = normalizeSlug(form.slug);
     if (!slug) {
-      setError(dict.blog.slugRequired);
+      showToast(dict.blog.slugRequired, "error");
       return;
     }
     if (!isSlugValid(slug)) {
-      setError(dict.blog.slugInvalid);
+      showToast(dict.blog.slugInvalid, "error");
       return;
     }
     updateField("slug", slug);
     setSaving(true);
-    setMessage("");
-    setError("");
 
     // Save content as HTML string if it's HTML, otherwise as array for backward compatibility
     let contentToSave;
@@ -343,12 +334,12 @@ export default function BlogPage() {
       .maybeSingle();
 
     if (upsertError) {
-      setError(upsertError.message);
+      showToast(upsertError.message, "error");
     } else {
       const newId = upserted?.id || selectedId;
       setSelectedId(newId || null);
       setIsCreatingMode(false);
-      setMessage(dict.common.saved);
+      showToast(dict.common.saved, "success");
       fetchPosts();
     }
     setSaving(false);
@@ -363,9 +354,9 @@ export default function BlogPage() {
       .delete()
       .eq("id", id);
     if (deleteError) {
-      setError(deleteError.message);
+      showToast(deleteError.message, "error");
     } else {
-      setMessage(dict.blog.deleted);
+      showToast(dict.blog.deleted, "success");
       fetchPosts();
       if (selectedId === id) {
         resetForm();
@@ -820,9 +811,6 @@ export default function BlogPage() {
             )}
           </div>
         </div>
-
-        {error && <div className={styles.error}>{error}</div>}
-        {message && <div className={styles.success}>{message}</div>}
       </div>
     </main>
   );
