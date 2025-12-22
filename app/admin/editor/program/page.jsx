@@ -32,8 +32,6 @@ export default function ProgramEditorPage() {
   useEffect(() => {
     if (authLoading || !session || !supabase) return;
     setLoading(true);
-    setError("");
-    setMessage("");
 
     supabase
       .from("program_sections")

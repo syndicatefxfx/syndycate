@@ -462,10 +462,6 @@ export default function SettingsPage() {
             <div className={styles.success}>{socialMessage}</div>
           )}
         </section>
-
-        <section className={styles.panel}>
-          <div className={styles.muted}>{dict.settings.comingSoon}</div>
-        </section>
       </div>
     </main>
   );

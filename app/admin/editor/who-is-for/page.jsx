@@ -118,8 +118,6 @@ export default function WhoIsForEditorPage() {
   const saveSection = async () => {
     if (!supabase || !session) return;
     setSaving(true);
-    setError("");
-    setMessage("");
 
     const { data: upserted, error: upsertError } = await supabase
       .from("who_is_for_sections")
@@ -137,14 +135,14 @@ export default function WhoIsForEditorPage() {
       .limit(1);
 
     if (upsertError) {
-      setError(upsertError.message);
+      showToast(upsertError.message, "error");
       setSaving(false);
       return;
     }
 
     const sectionId = upserted?.[0]?.id;
     if (!sectionId) {
-      setError(dict.common.errorSectionId);
+      showToast(dict.common.errorSectionId, "error");
       setSaving(false);
       return;
     }
@@ -167,9 +165,9 @@ export default function WhoIsForEditorPage() {
       .insert(payload);
 
     if (insertError) {
-      setError(insertError.message);
+      showToast(insertError.message, "error");
     } else {
-      setMessage(dict.common.saved);
+      showToast(dict.common.saved, "success");
     }
     setSaving(false);
   };

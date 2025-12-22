@@ -32,8 +32,6 @@ export default function AdvantagesEditorPage() {
   useEffect(() => {
     if (authLoading || !session || !supabase) return;
     setLoading(true);
-    setError("");
-    setMessage("");
 
     supabase
       .from("advantages_sections")

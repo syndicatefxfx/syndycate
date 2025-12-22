@@ -1,7 +1,7 @@
 .toast {
   position: fixed;
-  top: 20px;
-  right: clamp(16px, 4vw, 48px);
+  bottom: 20px;
+  left: clamp(16px, 4vw, 48px);
   z-index: 10000;
   min-width: 300px;
   max-width: 500px;
@@ -84,8 +84,8 @@
 
 .container {
   position: fixed;
-  top: 0;
-  right: 0;
+  bottom: 0;
+  left: 0;
   z-index: 10000;
   pointer-events: none;
   display: flex;
@@ -100,7 +100,7 @@
 
 @keyframes slideIn {
   from {
-    transform: translateX(100%);
+    transform: translateX(-100%);
     opacity: 0;
   }
   to {
@@ -113,8 +113,9 @@
   .toast {
     min-width: auto;
     width: calc(100% - 32px);
-    right: 16px;
+    bottom: 16px;
     left: 16px;
+    right: auto;
   }
 }
 
