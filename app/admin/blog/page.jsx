@@ -171,9 +171,30 @@ export default function BlogPage() {
     setLocale(defaultLocaleForLanguage(language));
   }, [language]);
 
-  const fetchPosts = () => {
+  const fetchPosts = async () => {
+    if (!supabase || !session) {
+      setLoading(false);
+      return;
+    }
+
+    // Проверяем, не истек ли токен
+    if (session.expires_at) {
+      const expiresAt = session.expires_at * 1000;
+      const now = Date.now();
+      if (now >= expiresAt) {
+        // Токен истек, пытаемся обновить
+        const { data: refreshData, error: refreshError } =
+          await supabase.auth.refreshSession();
+        if (refreshError || !refreshData.session) {
+          showToast("Session expired. Please login again.", "error");
+          setLoading(false);
+          return;
+        }
+      }
+    }
+
     setLoading(true);
-    supabase
+    const { data, error: fetchError } = await supabase
       .from("blog_posts")
       .select(
         `
@@ -195,15 +216,23 @@ export default function BlogPage() {
       )
       .eq("locale", locale)
       .order("published_at", { ascending: false, nullsLast: true })
-      .order("created_at", { ascending: false })
-      .then(({ data, error: fetchError }) => {
-        if (fetchError) {
-          showToast(fetchError.message, "error");
-        } else {
-          setPosts(data || []);
-        }
+      .order("created_at", { ascending: false });
+
+    if (fetchError) {
+      // Если ошибка авторизации, не показываем toast, просто выходим
+      if (
+        fetchError.code === "PGRST301" ||
+        fetchError.message?.includes("JWT")
+      ) {
+        console.error("[Blog] Auth error:", fetchError);
         setLoading(false);
-      });
+        return;
+      }
+      showToast(fetchError.message, "error");
+    } else {
+      setPosts(data || []);
+    }
+    setLoading(false);
   };
 
   const selectPost = (post) => {

@@ -1,19 +1,73 @@
 "use client";
 import styles from "@/styles/SaleBanner.module.css";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { useDictionary } from "./LanguageProvider";
+import { useLanguage } from "./LanguageProvider";
+import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
 
 export default function SaleBanner() {
   const dictionary = useDictionary();
-  const saleBannerCopy = dictionary.saleBanner ?? {};
+  const { language } = useLanguage();
+  const supabase = useMemo(() => createBrowserSupabaseClient(), []);
+  const [bannerData, setBannerData] = useState({
+    enabled: false, // По умолчанию отключен, пока не загрузятся данные
+    text: "Special Hanukkah sale — limited time offers available!",
+    button: "View offers",
+  });
   const [isVisible, setIsVisible] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const bannerRef = useRef(null);
 
   useEffect(() => {
-    // Появляется сразу после монтирования компонента
-    setIsVisible(true);
-  }, []);
+    if (!supabase) return;
+    supabase
+      .from("sale_banner_settings")
+      .select("enabled, text, button")
+      .eq("locale", language)
+      .eq("status", "published")
+      .limit(1)
+      .then(({ data, error }) => {
+        if (error) {
+          console.error("[SaleBanner] supabase error", error.message || error);
+          // При ошибке отключаем баннер
+          setBannerData({
+            enabled: false,
+            text: "Special Hanukkah sale — limited time offers available!",
+            button: "View offers",
+          });
+          return;
+        }
+        const record = data?.[0];
+        if (record) {
+          // Явно проверяем enabled - если он false, то false, если null/undefined, то false
+          setBannerData({
+            enabled: record.enabled === true,
+            text:
+              record.text ||
+              "Special Hanukkah sale — limited time offers available!",
+            button: record.button || "View offers",
+          });
+        } else {
+          // Если запись не найдена, отключаем баннер
+          setBannerData({
+            enabled: false,
+            text: "Special Hanukkah sale — limited time offers available!",
+            button: "View offers",
+          });
+        }
+      });
+  }, [language, supabase]);
+
+  useEffect(() => {
+    // Появляется сразу после монтирования компонента, только если баннер включен
+    if (bannerData.enabled) {
+      setIsVisible(true);
+    } else {
+      // Если баннер отключен, сразу скрываем его
+      setIsVisible(false);
+      setIsClosing(false);
+    }
+  }, [bannerData.enabled]);
 
   useEffect(() => {
     if (!isVisible) return;
@@ -61,7 +115,8 @@ export default function SaleBanner() {
     }, 300);
   };
 
-  if (!isVisible) return null;
+  // Если баннер отключен, не рендерим его
+  if (!bannerData.enabled || !isVisible) return null;
 
   return (
     <div
@@ -72,11 +127,14 @@ export default function SaleBanner() {
       onClick={(e) => e.stopPropagation()}
     >
       <span className={styles.text}>
-        {saleBannerCopy.text ??
+        {bannerData.text ||
+          dictionary.saleBanner?.text ||
           "Special Hanukkah sale — limited time offers available!"}
       </span>
       <button className={styles.button} onClick={scrollToParticipation}>
-        {saleBannerCopy.button ?? "View offers"}
+        {bannerData.button ||
+          dictionary.saleBanner?.button ||
+          "View offers"}
       </button>
     </div>
   );

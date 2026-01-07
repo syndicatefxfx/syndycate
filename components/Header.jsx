@@ -19,6 +19,7 @@ export default function Header() {
     { id: "tariffs", label: "TARIFFS", className: styles.button2 },
     { id: "faq", label: "FAQ", className: styles.button3 },
     { id: "blog", label: "BLOG", className: styles.button4, href: "/blog" },
+    { id: "about", label: "ABOUT", className: styles.button5, href: "/about" },
   ];
 
   // блокируем прокрутку фона, когда открыт оверлей
@@ -91,9 +92,9 @@ export default function Header() {
       {/* десктопная навигация (>1280px) */}
       <div className={styles.circles}>
         <nav className={styles.nav}>
-          {navItems.map(({ id, label, className }) =>
-            label === "BLOG" || id === "blog" ? (
-              <Link key={id} href="/blog" className={className}>
+          {navItems.map(({ id, label, className, href }) =>
+            href ? (
+              <Link key={id} href={href} className={className}>
                 {label}
               </Link>
             ) : (

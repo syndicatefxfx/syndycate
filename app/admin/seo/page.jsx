@@ -36,31 +36,55 @@ export default function SeoPage() {
 
   useEffect(() => {
     if (authLoading || !session || !supabase) return;
-    setLoading(true);
 
-    supabase
-      .from("pages")
-      .select("meta_title, meta_description, meta_h1, canonical, og_image")
-      .eq("slug", pageSlug)
-      .eq("locale", locale)
-      .eq("status", "published")
-      .limit(1)
-      .then(({ data, error: fetchError }) => {
-        if (fetchError) {
-          showToast(fetchError.message, "error");
+    const fetchData = async () => {
+      // Проверяем, не истек ли токен
+      if (session.expires_at) {
+        const expiresAt = session.expires_at * 1000;
+        const now = Date.now();
+        if (now >= expiresAt) {
+          // Токен истек, пытаемся обновить
+          const { data: refreshData, error: refreshError } =
+            await supabase.auth.refreshSession();
+          if (refreshError || !refreshData.session) {
+            showToast("Session expired. Please login again.", "error");
+            return;
+          }
+        }
+      }
+
+      setLoading(true);
+      const { data, error: fetchError } = await supabase
+        .from("pages")
+        .select("meta_title, meta_description, meta_h1, canonical, og_image")
+        .eq("slug", pageSlug)
+        .eq("locale", locale)
+        .eq("status", "published")
+        .limit(1);
+
+      if (fetchError) {
+        // Если ошибка авторизации, не показываем toast
+        if (fetchError.code === "PGRST301" || fetchError.message?.includes("JWT")) {
+          console.error("[SEO] Auth error:", fetchError);
           setLoading(false);
           return;
         }
-        const record = data?.[0];
-        setForm({
-          meta_title: record?.meta_title ?? "",
-          meta_description: record?.meta_description ?? "",
-          meta_h1: record?.meta_h1 ?? "",
-          canonical: record?.canonical ?? "",
-          og_image: record?.og_image ?? "",
-        });
+        showToast(fetchError.message, "error");
         setLoading(false);
+        return;
+      }
+      const record = data?.[0];
+      setForm({
+        meta_title: record?.meta_title ?? "",
+        meta_description: record?.meta_description ?? "",
+        meta_h1: record?.meta_h1 ?? "",
+        canonical: record?.canonical ?? "",
+        og_image: record?.og_image ?? "",
       });
+      setLoading(false);
+    };
+
+    fetchData();
   }, [authLoading, locale, pageSlug, session, supabase]);
 
   const updateField = (key, value) => {
