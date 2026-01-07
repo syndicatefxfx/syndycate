@@ -46,6 +46,10 @@ const blocks = [
     slug: "/admin/editor/sale-banner",
     title: "SALE BANNER",
   },
+  {
+    slug: "/admin/editor/about",
+    title: "ABOUT PAGE",
+  },
 ];
 
 export default function EditorIndex() {

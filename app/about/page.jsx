@@ -24,9 +24,8 @@ export default function AboutPage() {
     }
     // Загружаем контент страницы About (можно добавить таблицу в будущем)
     supabase
-      .from("blog_pages")
+      .from("about_pages")
       .select("kicker, title, subtitle")
-      .eq("slug", "about")
       .eq("locale", language)
       .eq("status", "published")
       .limit(1)

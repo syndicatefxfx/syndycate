@@ -231,9 +231,11 @@
   transform: translateY(-100%);
   transition: transform 0.45s ease;
   z-index: 5; /* над шапкой, но под кнопкой MENU */
-  /* display: grid; */
-  /* grid-template-rows: auto 1fr auto; */
-  opacity: 1; /* на случай будущих эффектов */
+  display: flex;
+  flex-direction: column;
+  opacity: 1;
+  visibility: hidden; /* Скрыто по умолчанию */
+  pointer-events: none; /* Отключаем взаимодействие когда скрыто */
 }
 
 .overlayLangSwitch {
@@ -261,6 +263,8 @@
 }
 .menuOpen {
   transform: translateY(0);
+  visibility: visible; /* Показываем когда открыто */
+  pointer-events: auto; /* Включаем взаимодействие */
 }
 
 /* верх: логотип по центру + декоративная линия */

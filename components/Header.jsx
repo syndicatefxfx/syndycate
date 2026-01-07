@@ -181,11 +181,12 @@ export default function Header() {
       </button>
 
       {/* оверлей-меню */}
-      <div
-        id="menu-overlay"
-        className={`${styles.menuOverlay} ${open ? styles.menuOpen : ""}`}
-        aria-hidden={!open}
-      >
+      {open && (
+        <div
+          id="menu-overlay"
+          className={`${styles.menuOverlay} ${styles.menuOpen}`}
+          aria-hidden={!open}
+        >
         <div className={styles.overlayHeader}>
           <div className={styles.overlayLogo}>SNDCT</div>
           <span className={styles.hLine} />
@@ -294,6 +295,7 @@ export default function Header() {
           </svg>
         </button>
       </div>
+      )}
     </header>
   );
 }
